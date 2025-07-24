@@ -1,4 +1,4 @@
-export interface Expense {
+export interface ExpenseFromInvoice {
   _id: string;
   amountDollars: number;
   amountBs: number;
@@ -9,8 +9,8 @@ export interface Expense {
   description: string;
   date: Date;
   paid: boolean;
-  // invoiceId?: string;
+  invoiceId?: string;
   googleRow: number;
 }
 
-export default Expense;
+export default ExpenseFromInvoice;

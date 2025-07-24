@@ -10,7 +10,7 @@ export const ExpenseDTO = z.object({
   description: z.string().min(1, 'La descripción es requerida'),
   date: z.coerce.date(),
   paid: z.boolean(),
-  invoiceId: z.string().optional(), // Si usás ObjectId en backend, podés validar el formato también
+  invoiceId: z.string().optional(), 
   googleRow: z.number().int().nonnegative()
 });
 

@@ -1,6 +1,6 @@
 import { IncomeRepository } from '@/domain/repository/IncomeRepository'
 
-export class GetIngresosUseCase {
+export class UpdateIncomeUseCase {
   constructor(private repo: IncomeRepository) {}
 
   async execute() {

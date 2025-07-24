@@ -14,7 +14,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/ingresos" element={<IncomePage />} />
         <Route path="/gastos" element={<ExpensePage />} />
-        <Route path="/invoices" element={<InvoicePage />} />
+        <Route path="/facturas" element={<InvoicePage />} />
 
 
         {/* Ruta principal a la página de login */}

@@ -2,20 +2,24 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ExpenseDTO, ExpenseDTOType } from '@/presentation/dtos/ExpenseDto';
-import { CreateExpenseUseCase } from '@/application/use_case/CreateExpenseUseCase';
+import { Expense } from '@/domain/model/Expense';
+import { createExpenseUseCase } from '@/application/di/expenseInstances'; // ⬅️ Importás desde DI
 
-const createExpenseUseCase = new CreateExpenseUseCase();
+interface Props {
+  onCreated?: (expense: Expense) => void;
+}
 
-export const CreateExpenseForm: React.FC = () => {
+export const CreateExpenseForm: React.FC<Props> = ({ onCreated }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ExpenseDTOType>({
     resolver: zodResolver(ExpenseDTO),
   });
 
   const onSubmit = async (data: ExpenseDTOType) => {
     try {
-      await createExpenseUseCase.execute(data);
+      const created = await createExpenseUseCase.execute(data);
       alert('Gasto creado correctamente!');
       reset();
+      onCreated?.(created);
     } catch (error) {
       alert('Error creando el gasto');
       console.error(error);
@@ -23,7 +27,8 @@ export const CreateExpenseForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md max-w-md w-full">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
+    {/* <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md max-w-md w-full"> */}
       <h2 className="text-lg font-bold text-primary">Crear Gasto</h2>
 
       <div>
@@ -52,15 +57,11 @@ export const CreateExpenseForm: React.FC = () => {
         <span className="text-sm">Pagado</span>
       </label>
 
-      <input className="input" type="number" {...register('googleRow')} placeholder="Fila Google" />
-      {errors.googleRow && <p className="error-message">{errors.googleRow.message}</p>}
-
       <input className="input" type="text" {...register('subType')} placeholder="Subtipo (opcional)" />
       <input className="input" type="text" {...register('paymentMethod')} placeholder="Método de pago (opcional)" />
-      <input className="input" type="text" {...register('invoiceId')} placeholder="ID Factura (opcional)" />
+      {/* <input className="input" type="text" {...register('invoiceId')} placeholder="ID Factura (opcional)" /> */}
 
       <button type="submit" className="btn w-full">Crear Gasto</button>
     </form>
   );
 };
-
