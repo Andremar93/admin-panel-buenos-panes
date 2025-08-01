@@ -1,4 +1,5 @@
 export interface Income {
+  _id: string;
   sitef: number;
   puntoExterno: number;
   efectivoBs: number;
@@ -10,6 +11,7 @@ export interface Income {
   totalSistema: number;
   notas: string;
   date: Date;
+  rate: number,
   googleRow: number;
 }
 

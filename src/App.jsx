@@ -1,31 +1,40 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { IncomePage } from './presentation/screens/income/IncomePage'
-import { LoginPage } from './presentation/screens/login/LoginPage'
-import { DashboardPage } from './presentation/screens/dashboard/DashboardPage'
-import { ExpensePage } from './presentation/screens/expense/ExpensePage'
-import { InvoicePage } from './presentation/screens/invoice/InvoicePage'
-
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { IncomePage } from './presentation/screens/income/IncomePage';
+import { LoginPage } from './presentation/screens/login/LoginPage';
+import { DashboardPage } from './presentation/screens/dashboard/DashboardPage';
+import { ExpensePage } from './presentation/screens/expense/ExpensePage';
+import { InvoicePage } from './presentation/screens/invoice/InvoicePage';
+import PrivateRoute from './presentation/components/PrivateRoute';
+import { IncomeCashier } from './presentation/screens/incomeCashier/IncomeCashier';
+import UnauthorizedPage from './presentation/screens/components/UnauthorizedPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/ingresos" element={<IncomePage />} />
-        <Route path="/gastos" element={<ExpensePage />} />
-        <Route path="/facturas" element={<InvoicePage />} />
-
-
-        {/* Ruta principal a la página de login */}
+        {/* Ruta pública */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        
-        {/* Redireccionar la raíz a /ingresos */}
+        {/* Rutas protegidas */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/caja" element={<IncomeCashier />} />
+        </Route>
+
+        {/* Rutas protegidas */}
+        <Route element={<PrivateRoute requiredRole="admin" />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/ingresos" element={<IncomePage />} />
+          <Route path="/gastos" element={<ExpensePage />} />
+          <Route path="/facturas" element={<InvoicePage />} />
+        </Route>
+
+        {/* Redirección raíz */}
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

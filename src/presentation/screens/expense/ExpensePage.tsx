@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { CreateExpenseForm } from './CreateExpenseForm';
 import { EditExpenseForm } from './EditExpenseForm';
 import { ExpenseList } from './ExpenseList';
-import { Expense } from '@/domain/model/Expense';
+import { Expense, toUpdateExpenseData } from '@/domain/model/Expense';
+import { CreateExpenseDTOType } from '@/presentation/dtos/expense/CreateExpenseDto';
+import { UpdateExpenseDTOType } from '@/presentation/dtos/expense/UpdateExpenseDto';
+import { useExpense } from '@/hooks/useExpense'
 
 export const ExpensePage = () => {
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  // Cuando se actualiza un gasto editado, lo reemplaza en la lista
-  const handleSave = (updated: Expense) => {
-    setExpenses((prev) =>
-      prev.map((exp) => (exp._id === updated._id ? updated : exp))
-    );
-    setSelectedExpense(null);
+  const { expenses, loading, error, createExpense, updateExpense } = useExpense();
+
+  const [selectedExpense, setSelectedExpense] = useState<UpdateExpenseDTOType | null>(null);
+
+
+  const handleCreated = async (data: CreateExpenseDTOType) => {
+    await createExpense(data);
   };
+
+
+  const handleUpdated = async (data: UpdateExpenseDTOType) => {
+    await updateExpense(data);
+  };
+
 
   return (
     <div style={{ display: 'flex', gap: 20, padding: 20 }}>
@@ -23,19 +31,20 @@ export const ExpensePage = () => {
         {selectedExpense ? (
           <EditExpenseForm
             initialData={selectedExpense}
-            onClose={() => setSelectedExpense(null)}
-            onSave={handleSave}
+            onCancel={() => setSelectedExpense(null)}
+            onUpdated={handleUpdated}
           />
         ) : (
           <CreateExpenseForm
-            onCreated={(newExpense) => setExpenses((prev) => [newExpense, ...prev])}
+            onCreated={handleCreated}
           />
         )}
       </div>
 
       <ExpenseList
         expenses={expenses}
-        setExpenses={setExpenses}
+        loading={loading}
+        error={error}
         onEdit={setSelectedExpense}
       />
 

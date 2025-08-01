@@ -14,10 +14,13 @@ export const useLogin = () => {
     setError(null);
     try {
       const user = await loginUseCase.execute(email, password);
-
+      console.log(user);
       if (user.token) {
-        localStorage.setItem('token', user.token);
-        navigate('/dashboard');
+        localStorage.setItem('auth_token', user.token);
+        localStorage.setItem('user', JSON.stringify(user.user));
+        user.user.userType == 'admin'
+          ? navigate('/dashboard')
+          : navigate('/caja');
       }
     } catch (err: any) {
       setError(err.message);

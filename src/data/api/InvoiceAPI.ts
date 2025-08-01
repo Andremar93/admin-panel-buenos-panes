@@ -1,16 +1,24 @@
 import { Invoice } from '@/domain/model/Invoice';
-import { InvoiceDTOType } from '@/presentation/dtos/InvoiceDto';
+import { InvoiceDTOType } from '@/presentation/dtos/invoice/InvoiceDto';
+import { CreateInvoiceDTOType } from '@/presentation/dtos/invoice/CreateInvoiceDto';
 import api from '@/config/api';
 
 export const InvoiceAPI = {
-  async createInvoice(invoice: Invoice): Promise<Invoice> {
+  async createInvoice(invoice: CreateInvoiceDTOType): Promise<Invoice> {
     const res = await api.post('/invoices/create', invoice);
     return res.data.invoice;
   },
 
-  async updateInvoice(invoice: Invoice): Promise<Invoice> {
-    console.log('Invoice:', invoice);
-    const res = await api.put(`/expenses/update`, invoice);
+  async updateInvoice(
+    invoice: InvoiceDTOType,
+    invoiceId: String
+  ): Promise<Invoice> {
+    const res = await api.put(`/invoices/${invoiceId}`, invoice);
+    return res.data.invoice;
+  },
+
+  async deleteInvoice(invoiceId: String): Promise<Invoice> {
+    const res = await api.delete(`/invoices/${invoiceId}`);
     return res.data.invoice;
   },
 
@@ -19,13 +27,12 @@ export const InvoiceAPI = {
     paymentMethod: String,
     date: Date
   ): Promise<Invoice> {
-    console.log('Invoice:', invoiceId);
     const res = await api.post(`/expenses/create-by-invoice`, {
       invoiceId,
       paymentMethod,
       date,
     });
-    console.log('RESPONSE: ', res);
+
     return res.data.invoice;
   },
 

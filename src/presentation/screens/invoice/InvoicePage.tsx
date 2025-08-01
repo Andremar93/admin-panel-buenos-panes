@@ -1,29 +1,32 @@
 import { useState } from 'react';
 import { useInvoices } from '@/hooks/useInvoice';
-import { Invoice } from '@/domain/model/Invoice';
+import { CreateInvoiceDTOType } from '@/presentation/dtos/invoice/CreateInvoiceDto';
 import { CreateInvoiceForm } from '@/presentation/screens/invoice/CreateInvoiceForm';
 import { EditInvoiceForm } from '@/presentation/screens/invoice/EditInvoiceForm';
 import { InvoiceList } from '@/presentation/screens/invoice/InvoiceList';
+import { UpdateInvoiceDTOType } from '@/presentation/dtos/invoice/UpdateInvoiceDto';
 
 export const InvoicePage = () => {
-  const { invoices, loading, error, createInvoice, updateInvoice } = useInvoices();
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const { invoices, loading, error, updateInvoice, createInvoice, deleteInvoice } = useInvoices();
+  const [selectedInvoice, setSelectedInvoice] = useState<UpdateInvoiceDTOType | null>(null);
 
-  const handleCreated = (invoice: Invoice) => {
-    createInvoice(invoice);
-    setSelectedInvoice(null);
+  // const onDelete = async (invoiceId: string) => {
+  //   await deleteInvoice(invoiceId);
+  // }
+
+  const handleCreated = async (data: CreateInvoiceDTOType) => {
+    await createInvoice(data); // esto actualiza el estado del hook
   };
 
-  const handleUpdated = async (data: Invoice) => {
-    await updateInvoice(data);
-    setSelectedInvoice(null);
+  const handleUpdated = async (invoiceId: string, data: UpdateInvoiceDTOType) => {
+    await updateInvoice(data, invoiceId);
   };
 
   return (
     <div style={{ display: 'flex', gap: 20, padding: 20 }}>
 
       <div style={{ flex: 1, borderRight: '1px solid #ccc', paddingRight: 20 }}>
-  
+
         {selectedInvoice ? (
           <EditInvoiceForm
             initialData={selectedInvoice}
@@ -38,6 +41,7 @@ export const InvoicePage = () => {
       <InvoiceList
         invoices={invoices}
         loading={loading}
+        // onDelete={onDelete}
         error={error}
         onEdit={setSelectedInvoice}
       />

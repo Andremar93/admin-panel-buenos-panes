@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export const InvoiceDTO = z.object({
   supplier: z.string().min(1, 'Proveedor requerido'),
-  dueDate: z.string().or(z.date()), // puede ser string (input) o Date (cuando se parsea)
+  dueDate: z.string().or(z.date()), 
   amountDollars: z.number().min(0, 'Debe ser mayor o igual a 0'),
   amountBs: z.number().min(0, 'Debe ser mayor o igual a 0'),
   currency: z.enum(['$', 'Bs']),

@@ -1,11 +1,11 @@
 import { Expense } from '@/domain/model/Expense';
-import { ExpenseDTOType } from '@/presentation/dtos/ExpenseDto';
+import { UpdateExpenseDTOType } from '@/presentation/dtos/expense/UpdateExpenseDto';
 import { ExpenseRepository } from '@/domain/repository/ExpenseRepository';
 
 export class UpdateExpenseUseCase {
   constructor(private repository: ExpenseRepository) {}
 
-  async execute(id: string, data: Partial<ExpenseDTOType>): Promise<Expense> {
-    return this.repository.update(id, data);
+  async execute( data: UpdateExpenseDTOType): Promise<Expense> {
+    return this.repository.update(data._id, data);
   }
 }

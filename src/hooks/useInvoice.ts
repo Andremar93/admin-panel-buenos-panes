@@ -7,8 +7,10 @@ import {
   createInvoiceUseCase,
   updateInvoiceUseCase,
   payInvoiceUseCase,
+  eraseInvoiceUseCase,
 } from '@/application/di/invoiceInstance';
-import { InvoiceDTOType } from '@/presentation/dtos/InvoiceDto';
+import { InvoiceDTOType } from '@/presentation/dtos/invoice/InvoiceDto';
+import { CreateInvoiceDTOType } from '@/presentation/dtos/invoice/CreateInvoiceDto';
 
 export function useInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -32,14 +34,19 @@ export function useInvoices() {
     }
   };
 
-  const createInvoice = async (invoiceDto: InvoiceDTOType) => {
-    const created = await createInvoiceUseCase.execute(invoiceDto);
+  const createInvoice = async (createInvoiceDto: CreateInvoiceDTOType) => {
+    const created = await createInvoiceUseCase.execute(createInvoiceDto);
     setInvoices((prev) => [created, ...prev]);
     return created;
   };
 
-  const updateInvoice = async (invoice: InvoiceDTOType) => {
-    const updated = await updateInvoiceUseCase.execute(invoice);
+  const deleteInvoice = async (id: string) => {
+    await eraseInvoiceUseCase.execute(id);
+    setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+  };
+
+  const updateInvoice = async (invoice: InvoiceDTOType, invoiceId: String) => {
+    const updated = await updateInvoiceUseCase.execute(invoice, invoiceId);
     setInvoices((prev) =>
       prev.map((inv) => (inv._id === updated._id ? updated : inv))
     );
@@ -79,6 +86,7 @@ export function useInvoices() {
     createInvoice,
     updateInvoice,
     payInvoice,
+    deleteInvoice,
     reload: loadInvoices,
   };
 }

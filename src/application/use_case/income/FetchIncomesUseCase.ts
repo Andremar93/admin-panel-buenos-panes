@@ -1,9 +1,10 @@
-import { IncomeRepository } from '@/domain/repository/IncomeRepository'
+import Income from '@/domain/model/Income';
+import { IncomeRepository } from '@/domain/repository/IncomeRepository';
 
 export class FetchIncomesUseCase {
   constructor(private repo: IncomeRepository) {}
 
-  async execute() {
-    return await this.repo.getAll()
+  async execute(filters?: { startDate?: string; finishDate?: string }) {
+    return await this.repo.getAll(filters);
   }
 }

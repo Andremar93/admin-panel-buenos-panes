@@ -1,5 +1,6 @@
 import { Expense } from '@/domain/model/Expense';
-import { ExpenseFromInvoice } from '@/domain/model/ExpenseFromInvoice'
+import { ExpenseFromInvoice } from '@/domain/model/ExpenseFromInvoice';
+import { UpdateExpenseDTOType } from '@/presentation/dtos/expense/UpdateExpenseDto';
 import api from '@/config/api';
 
 export const ExpenseAPI = {
@@ -18,13 +19,16 @@ export const ExpenseAPI = {
     return res.data.expense;
   },
 
-  async updateExpense(expense: Expense, id: String): Promise<Expense> {
+  async updateExpense(
+    id: String,
+    expense: UpdateExpenseDTOType
+  ): Promise<Expense> {
     const res = await api.put(`/expenses/${id}`, expense);
     return res.data.expense;
   },
 
   async fetchExpenses(): Promise<Expense[]> {
-    const res = await api.get('/expenses/get');
-    return res.data;
+    const res = await api.post('/expenses/get');
+    return res.data.expenses;
   },
 };

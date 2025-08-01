@@ -1,5 +1,5 @@
 import { Invoice } from '@/domain/model/Invoice';
-import { InvoiceDTOType } from '@/presentation/dtos/InvoiceDto';
+import { InvoiceDTOType } from '@/presentation/dtos/invoice/InvoiceDto';
 import { InvoiceRepository } from '@/domain/repository/InvoiceRepository';
 
 export class PayInvoiceUseCase {

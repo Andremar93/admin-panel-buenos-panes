@@ -1,88 +1,126 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useInvoices } from '@/hooks/useInvoice';
-import { InvoiceDTO, InvoiceDTOType } from '@/presentation/dtos/InvoiceDto';
-import { Invoice } from '@/domain/model/Invoice';
+import { CreateInvoiceDTO, CreateInvoiceDTOType } from '@/presentation/dtos/invoice/CreateInvoiceDto';
 
 interface Props {
-  onCreated: (invoice: Invoice) => void;
+  onCreated: (data: CreateInvoiceDTOType) => void;
 }
 
 export const CreateInvoiceForm: React.FC<Props> = ({ onCreated }) => {
-  const { createInvoice } = useInvoices();
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<InvoiceDTOType>({
-    resolver: zodResolver(InvoiceDTO),
+    setValue,
+    watch,
+  } = useForm<CreateInvoiceDTOType>({
+    resolver: zodResolver(CreateInvoiceDTO),
   });
 
-  const onSubmit = async (data: InvoiceDTOType) => {
+  const onSubmit = async (data: CreateInvoiceDTOType) => {
+    setIsSubmitting(true);
     try {
-      const created = await createInvoice(data);
-      onCreated(created);
-      reset();
+      await onCreated(data);
+      setSuccessMessage('Factura creada exitosamente');
+
+      setTimeout(() => { setSuccessMessage(''), reset() }, 3000);
     } catch (err) {
       alert('Error creando la factura');
       console.error(err);
+    } finally {
+      setIsSubmitting(false)
+
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
-      <h2 className="text-lg font-bold text-primary">Nueva Factura</h2>
 
-      <input className="input" {...register('supplier')} placeholder="Proveedor" />
-      {errors.supplier && <p className="error-message">{errors.supplier.message}</p>}
+    <div>
+      {successMessage && (
+        <div className="bg-green-100 border border-green-300 text-green-700 text-sm px-4 py-2 rounded">
+          {successMessage}
+        </div>
+      )}
 
-      <input className="input" {...register('description')} placeholder="Descripción" />
-      {errors.description && <p className="error-message">{errors.description.message}</p>}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
 
-      <div className="flex gap-4">
+        <h2 className="text-lg font-bold text-primary">Nueva Factura</h2>
+
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Proveedor
+        </label>
+        <input className="input" {...register('supplier')} placeholder="Proveedor" />
+        {errors.supplier && <p className="error-message">{errors.supplier.message}</p>}
+
+
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Número factura
+        </label>
+        <input className="input" type="text" {...register('numeroFactura')} placeholder="Número de factura" />
+        {errors.numeroFactura && <p className="error-message">{errors.numeroFactura.message}</p>}
+
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setValue('currency', '$')}
+            className={`btn flex-1 ${watch('currency') === '$' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            $
+          </button>
+          <button
+            type="button"
+            onClick={() => setValue('currency', 'Bs')}
+            className={`btn flex-1 ${watch('currency') === 'Bs' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Bs
+          </button>
+        </div>
+
         <input
           className="input"
-          type="number"
-          step="0.01"
-          {...register('amountDollars')}
-          placeholder="Monto en dólares"
+          type="text"
+          {...register('amount', {
+            setValueAs: (v) => {
+              const str = typeof v === 'string' ? v : String(v ?? '');
+              const replaced = str.replace(',', '.');
+              const parsed = parseFloat(replaced);
+              return parsed;
+            },
+          })}
+          placeholder="Monto"
         />
-        <input
-          className="input"
-          type="number"
-          step="0.01"
-          {...register('amountBs')}
-          placeholder="Monto en Bs"
-        />
-      </div>
+        {errors.amount && <p className="error-message">{errors.amount.message}</p>}
 
-      <select className="input" {...register('currency')}>
-        <option value="$">$</option>
-        <option value="Bs">Bs</option>
-      </select>
 
-      <input className="input" {...register('type')} placeholder="Tipo" />
-      {errors.type && <p className="error-message">{errors.type.message}</p>}
+        <input type="hidden" {...register('type')} value="Proveedor" />
 
-      <input className="input" type="text" {...register('subType')} placeholder="Subtipo (opcional)" />
-      <input className="input" type="text" {...register('paymentMethod')} placeholder="Método de pago (opcional)" />
-      <input className="input" type="text" {...register('numeroFactura')} placeholder="Número de factura (opcional)" />
 
-      <input className="input" type="date" {...register('date')} />
-      {errors.date && <p className="error-message">{errors.date.message}</p>}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Fecha de emisión:
+        </label>
+        <input className="input" type="date" {...register('date')} />
+        {errors.date && <p className="error-message">{errors.date.message}</p>}
 
-      <input className="input" type="date" {...register('dueDate')} placeholder="Fecha de vencimiento" />
-      {errors.dueDate && <p className="error-message">{errors.dueDate.message}</p>}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Fecha de Vencimiento:
+        </label>
+        <input className="input" type="date" {...register('dueDate')} placeholder="Fecha de vencimiento" />
+        {errors.dueDate && <p className="error-message">{errors.dueDate.message}</p>}
 
-      <label className="flex items-center gap-2">
-        <input type="checkbox" {...register('paid')} className="form-checkbox" />
-        <span className="text-sm">Pagado</span>
-      </label>
 
-      <button type="submit" className="btn w-full">Crear Factura</button>
-    </form>
+        <button type="submit" className="btn w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Creando...' : 'Crear Factura'}
+        </button>
+
+      </form>
+    </div>
+
+
   );
 };
