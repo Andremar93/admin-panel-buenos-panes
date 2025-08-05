@@ -5,7 +5,7 @@ import { CreateIncomeDTOType } from '@/presentation/dtos/income/createIncomeDto'
 import { UpdateIncomeDTOType } from '@/presentation/dtos/income/UpdateIncomeDto';
 
 export class IncomeRepositoryImpl implements IncomeRepository {
-  async getAll(filters): Promise<Income[]> {
+  async getAll(filters?: { startDate?: string; finishDate?: string }): Promise<Income[]> {
     return await IncomeAPI.fetchIncomes(filters);
   }
 

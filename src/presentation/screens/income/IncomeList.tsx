@@ -71,19 +71,15 @@ export const IncomeList: React.FC<Props> = ({ incomes, loading, error, onEdit, s
 
     return (
         <div style={{ flex: 1, paddingLeft: 20 }}>
-
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-xl shadow-sm">
                 <h2 className="text-base font-semibold text-yellow-800 mb-3">💰 Total Ingresos: <FormattedAmount amount={totalIngresosUSD} currency="USD" /> vs Sistema: <FormattedAmount amount={totals.totalSistema} currency="USD" /></h2>
-
                 <div className="grid grid-cols-2 gap-4 text-sm text-yellow-900">
-
                     <div>
                         <div className="flex items-center justify-between col-span-2">
                             <p className="font-medium">
                                 💵 Efectivo USD: <FormattedAmount amount={totals.efectivoDolares} currency="USD" />
                             </p>
                         </div>
-
                         <div>
                             <p className="font-medium">
                                 💴 Efectivo Bs :

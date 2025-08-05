@@ -4,5 +4,5 @@ import { UpdateExpenseDTOType } from '@/presentation/dtos/expense/UpdateExpenseD
 export interface ExpenseRepository {
   create(expense: ExpenseDTOType): Promise<Expense>;
   update(id: string, expense: UpdateExpenseDTOType): Promise<Expense>;
-  getAll(): Promise<Expense[]>;
+  getAll(filters?: { startDate?: string; finishDate?: string }): Promise<Expense[]>;
 }

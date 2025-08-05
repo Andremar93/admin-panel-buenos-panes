@@ -13,7 +13,7 @@ export class ExpenseRepositoryImpl implements ExpenseRepository {
     return ExpenseAPI.updateExpense(id, expense);
   }
 
-  async getAll(): Promise<Expense[]> {
-    return ExpenseAPI.fetchExpenses();
+  async getAll(filters?: { startDate?: string; finishDate?: string }): Promise<Expense[]> {
+    return ExpenseAPI.fetchExpenses(filters);
   }
 }

@@ -35,9 +35,6 @@ export function IncomePage() {
 
   return (
     <div style={{ display: 'flex', gap: 20, padding: 20 }}>
-
-
-
       <div style={{ flex: 1, borderRight: '1px solid #ccc', paddingRight: 20 }}>
         {error && <p className="text-red-600 font-medium">{error}</p>}
 

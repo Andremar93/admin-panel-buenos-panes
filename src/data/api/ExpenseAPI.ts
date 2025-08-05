@@ -24,11 +24,15 @@ export const ExpenseAPI = {
     expense: UpdateExpenseDTOType
   ): Promise<Expense> {
     const res = await api.put(`/expenses/${id}`, expense);
+    console.log(res)
     return res.data.expense;
   },
 
-  async fetchExpenses(): Promise<Expense[]> {
-    const res = await api.post('/expenses/get');
+  async fetchExpenses(filters?: {
+    startDate?: string;
+    finishDate?: string;
+  }): Promise<Expense[]> {
+    const res = await api.post('/expenses/get', filters || {});
     return res.data.expenses;
   },
 };

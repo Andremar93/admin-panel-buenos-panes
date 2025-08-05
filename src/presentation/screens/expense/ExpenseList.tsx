@@ -6,9 +6,14 @@ interface Props {
   loading: boolean;
   error: string | null;
   onEdit: (expense: Expense) => void;
+  startDate: string;
+  finishDate: string;
+  setStartDate: (value: string) => void;
+  setFinishDate: (value: string) => void;
+  onFilter: () => void;
 }
 
-export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit }) => {
+export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit, startDate, finishDate, setStartDate, setFinishDate, onFilter }) => {
 
   const [filterText, setFilterText] = useState('');
 
@@ -20,6 +25,7 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit 
 
   const totals = filteredExpenses.reduce(
     (acc, inv) => {
+      const amount = inv.amountDollars || 0;
       // const rate = inv.rate && inv.rate !== 0 ? inv.rate : 100;
       acc.efectivoDolares += inv.paymentMethod == 'dolaresEfectivo' ? inv.amountDollars : 0
       acc.efectivoBs += inv.paymentMethod == 'bsEfectivo' ? inv.amountDollars : 0
@@ -29,7 +35,6 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit 
       acc.gastosPersonales += inv.type == 'gastosPersonales' ? inv.amountDollars : 0
       acc.proveedor += inv.type == 'Proveedor' ? inv.amountDollars : 0
       acc.gastosExtraordinarios += inv.type == 'gastosExtraordinarios' ? inv.amountDollars : 0
-
       return acc;
     },
     {
@@ -40,7 +45,7 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit 
       comprasDiarias: 0,
       gastosPersonales: 0,
       proveedor: 0,
-      gastosExtraordinarios: 0
+      gastosExtraordinarios: 0,
     }
   );
 
@@ -54,7 +59,7 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit 
     <div style={{ flex: 1, paddingLeft: 20 }}>
 
       <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-xl shadow-sm">
-        <h3 className="text-base font-semibold text-yellow-800 mb-3">💰 Totales Gastos</h3>
+        <h3 className="text-base font-semibold text-yellow-800 mb-3">💰 Totales Gastos: <FormattedAmount amount={totals.amountDollars} currency="USD" /></h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-yellow-900">
           {/* Efectivo */}
           <div>
@@ -66,13 +71,6 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit 
           <div>
             <p className="font-medium">💴 Efectivo Bs:
               <FormattedAmount amount={totals.efectivoBs} currency="USD" />
-            </p>
-          </div>
-
-          {/* Totales generales */}
-          <div>
-            <p className="font-medium">💴 Total en USD:
-              <FormattedAmount amount={totals.amountDollars} currency="USD" />
             </p>
           </div>
 
@@ -117,6 +115,36 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit 
         onChange={(e) => setFilterText(e.target.value)}
         className="input mb-4"
       />
+
+      <div className="mb-4 flex items-end gap-4">
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Desde</label>
+          <input
+            type="date"
+            className="input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Hasta</label>
+          <input
+            type="date"
+            className="input"
+            value={finishDate}
+            onChange={(e) => setFinishDate(e.target.value)}
+          />
+        </div>
+
+        <button
+          className="btn"
+          onClick={onFilter}
+          disabled={!startDate || !finishDate}
+        >
+          Filtrar
+        </button>
+      </div>
 
       <h2 className="text-xl font-bold text-gray-800 mb-4">Gastos:</h2>
       <ul className="space-y-4">

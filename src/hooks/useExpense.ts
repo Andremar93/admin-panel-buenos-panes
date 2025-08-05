@@ -14,22 +14,34 @@ export function useExpense() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterRange, setFilterRange] = useState<{ from: string; to: string }>({
+    from: '',
+    to: '',
+  });
 
   useEffect(() => {
     loadExpenses();
   }, []);
 
-  const loadExpenses = async () => {
+  const loadExpenses = async (filters?: {
+    startDate?: string;
+    finishDate?: string;
+  }) => {
     setLoading(true);
     try {
-      const data = await fetchExpensesUseCase.execute();
+      const data = await fetchExpensesUseCase.execute(filters);
       setExpenses(data.expenses);
+      setFilterRange({ from: data.from, to: data.to });
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Error al cargar ingresos');
+      setError(err.message || 'Error al cargar gastos');
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = (startDate: string, finishDate: string) => {
+    loadExpenses({ startDate, finishDate });
   };
 
   const createExpense = async (dto: CreateExpenseDTOType) => {
@@ -57,8 +69,10 @@ export function useExpense() {
     expenses,
     loading,
     error,
+    filterRange,
     createExpense,
     updateExpense,
+    applyFilters,
     reload: loadExpenses,
   };
 }

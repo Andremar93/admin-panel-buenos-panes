@@ -15,7 +15,7 @@ export const IncomeAPI = {
   async createIncome(data: CreateIncomeDTOType): Promise<Income> {
     try {
       const res = await api.post('/incomes/create', data);
-      return res.data.incomes;
+      return res.data.income;
     } catch (error: any) {
       // Podés loguear, lanzar un error personalizado, o manejar según el status
       if (error.response?.status === 404) {

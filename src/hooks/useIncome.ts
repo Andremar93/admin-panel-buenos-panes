@@ -24,6 +24,7 @@ export function useIncome() {
   });
 
   useEffect(() => {
+    console.log('LOADING INCOME')
     loadIncomes();
   }, []);
 
@@ -32,7 +33,6 @@ export function useIncome() {
     finishDate?: string;
   }) => {
     setLoading(true);
-    console.log('enviando');
     try {
       const data = await fetchIncomesUseCase.execute(filters);
       setIncomes(data.incomes);
@@ -52,6 +52,7 @@ export function useIncome() {
   const createIncome = async (dto: CreateIncomeDTOType) => {
     try {
       const created = await createIncomeUseCase.execute(dto);
+      console.log('created', created);
       setIncomes((prev) => [created, ...prev]);
     } catch (err: any) {
       console.log('errfrom useincome');
