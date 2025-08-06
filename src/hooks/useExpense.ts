@@ -1,4 +1,3 @@
-import { ExpenseAPI } from '@/data/api/ExpenseAPI';
 import { useState, useEffect } from 'react';
 import { Expense } from '@/domain/model/Expense';
 import { CreateExpenseDTOType } from '@/presentation/dtos/expense/CreateExpenseDto';

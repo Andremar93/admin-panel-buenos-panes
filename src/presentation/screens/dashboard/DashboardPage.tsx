@@ -168,6 +168,14 @@ export const DashboardPage = () => {
               {isSidebarOpen ? 'Facturas' : '🧾'}
             </Link>
           </li>
+          <li>
+            <Link
+              to="/empleados"
+              className="hover:text-gray-300 block whitespace-nowrap"
+            >
+              {isSidebarOpen ? 'Empleados' : '👥'}
+            </Link>
+          </li>
         </ul>
       </aside>
 

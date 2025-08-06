@@ -12,6 +12,7 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
+  console.log("pasa por aqui")
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,7 +22,6 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log('error from api.ts')
     if (error.response) {
       const status = error.response.status;
 
@@ -31,10 +31,9 @@ api.interceptors.response.use(
         localStorage.removeItem('user_type');
         window.location.href = '/login';
       }
-
       // Devolvés un error controlado
       throw new Error(
-        error.response.data.error || 'Error en la respuesta del servidor'
+        error.response.data.message || 'Error en la respuesta del servidor'
       );
     }
 

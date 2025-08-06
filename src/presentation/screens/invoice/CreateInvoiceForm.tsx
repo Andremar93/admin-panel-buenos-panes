@@ -30,7 +30,7 @@ export const CreateInvoiceForm: React.FC<Props> = ({ onCreated }) => {
 
       setTimeout(() => { setSuccessMessage(''), reset() }, 3000);
     } catch (err) {
-      alert('Error creando la factura');
+      alert(err);
       console.error(err);
     } finally {
       setIsSubmitting(false)

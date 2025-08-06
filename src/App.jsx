@@ -4,6 +4,7 @@ import { IncomePage } from './presentation/screens/income/IncomePage';
 import { LoginPage } from './presentation/screens/login/LoginPage';
 import { DashboardPage } from './presentation/screens/dashboard/DashboardPage';
 import { ExpensePage } from './presentation/screens/expense/ExpensePage';
+import { EmployeePage } from './presentation/screens/employee/EmployeePage'
 import { InvoicePage } from './presentation/screens/invoice/InvoicePage';
 import PrivateRoute from './presentation/components/PrivateRoute';
 import { IncomeCashier } from './presentation/screens/incomeCashier/IncomeCashier';
@@ -28,6 +29,7 @@ function App() {
           <Route path="/ingresos" element={<IncomePage />} />
           <Route path="/gastos" element={<ExpensePage />} />
           <Route path="/facturas" element={<InvoicePage />} />
+          <Route path="/empleados" element={<EmployeePage />} />
         </Route>
 
         {/* Redirección raíz */}
