@@ -10,6 +10,7 @@ interface Props {
   onDelete: (invoiceId: String) => void;
   loading: boolean;
   error: string | null;
+  exchangeRate: string;
   onEdit: (invoice: UpdateInvoiceDTOType) => void;
 }
 
@@ -18,6 +19,7 @@ export const InvoiceList: React.FC<Props> = ({
   loading,
   error,
   onEdit,
+  exchangeRate,
   onDelete,
 }) => {
   const { payInvoice } = useInvoices();
@@ -25,18 +27,35 @@ export const InvoiceList: React.FC<Props> = ({
   const [selectedToPay, setSelectedToPay] = useState<Invoice | null>(null);
   const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
   const [filterText, setFilterText] = useState('');
+  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
 
-  const filteredInvoices = invoices.filter((invoice) =>
-    `${invoice.supplier} ${invoice.numeroFactura}`.toLowerCase().includes(filterText.toLowerCase())
-  );
+  const toggleInvoiceSelection = (invoiceId: string) => {
+    setSelectedInvoices((prevSelected) =>
+      prevSelected.includes(invoiceId)
+        ? prevSelected.filter((id) => id !== invoiceId)
+        : [...prevSelected, invoiceId]
+    );
+  };
+
+
+  const filteredInvoices = invoices
+    .filter((invoice) =>
+      `${invoice.supplier} ${invoice.numeroFactura}`.toLowerCase().includes(filterText.toLowerCase())
+    )
+
+
+  const selectedTotalUSD = filteredInvoices
+    .filter((inv) => selectedInvoices.includes(inv._id))
+    .reduce((acc, inv) => acc + inv.amountDollars, 0);
+
+  const selectedTotalBs = selectedTotalUSD * Number(exchangeRate);
+
 
   const totalPendienteDolares = filteredInvoices
     .filter((inv) => !inv.paid)
     .reduce((acc, inv) => acc + inv.amountDollars, 0);
 
-  const totalPendienteBs = filteredInvoices
-    .filter((inv) => !inv.paid)
-    .reduce((acc, inv) => acc + inv.amountBs, 0);
+  const totalPendienteBs = (totalPendienteDolares * Number(exchangeRate))
 
   const handlePay = (date: string) => {
     if (selectedToPay) {
@@ -60,6 +79,21 @@ export const InvoiceList: React.FC<Props> = ({
           <FormattedAmount amount={totalPendienteDolares} currency="USD" /> /{' '}
           <FormattedAmount amount={totalPendienteBs} currency="Bs" prefix="" />
         </p>
+
+
+        {selectedInvoices.length > 0 && (
+          <div className="mb-4 p-4 bg-green-100 border border-green-300 rounded">
+            <p className="text-md font-bold text-green-900">
+              Total seleccionado para pagar: {selectedInvoices.length} factura(s)
+            </p>
+            <p className="text-lg font-bold text-green-900">
+              <FormattedAmount amount={selectedTotalUSD} currency="USD" /> /{' '}
+              <FormattedAmount amount={selectedTotalBs} currency="Bs" prefix="" />
+            </p>
+          </div>
+        )}
+
+
       </div>
 
       {/* Filtro */}
@@ -80,52 +114,90 @@ export const InvoiceList: React.FC<Props> = ({
       {!loading && invoices.length === 0 && <p className="text-gray-400">No hay facturas registradas.</p>}
 
       {/* Lista */}
-      <ul className="space-y-4">
+      <ul className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
         {filteredInvoices.map((invoice) => (
-          <li key={invoice._id} className="bg-white p-4 rounded-lg shadow flex flex-col">
-            {/* Proveedor y número */}
-            <div className="font-semibold text-primary">
-              {invoice.supplier} - #{invoice.numeroFactura}
-            </div>
+          <li
+            key={invoice._id}
+            className="bg-white p-4 rounded-2xl shadow flex flex-col gap-2 border border-gray-200 relative"
+          >
+            {/* Contenedor principal con flex horizontal para checkbox + contenido */}
+            <div className="flex items-start gap-3">
+              {/* Checkbox a la izquierda */}
+              <input
+                type="checkbox"
+                checked={selectedInvoices.includes(invoice._id)}
+                onChange={() => toggleInvoiceSelection(invoice._id)}
+                className="accent-green-600 mt-1"
+              />
 
-            {/* Monto */}
-            <div className="text-sm text-gray-600">
-              <FormattedAmount amount={invoice.amountDollars} currency="USD" /> / <FormattedAmount amount={invoice.amountBs} currency="Bs" />
-            </div>
+              {/* Contenido de la factura */}
+              <div className="flex-1 flex flex-col gap-2">
+                {/* Vencimiento arriba a la derecha */}
+                {(() => {
+                  const dueDate = new Date(invoice.dueDate);
+                  const isOverdue = dueDate < new Date();
 
-            {/* Vencimiento */}
-            <div className="text-xs text-gray-500">
-              Vencimiento:  <FormattedDate date={invoice.dueDate} />
-            </div>
+                  return (
+                    <div
+                      className={`absolute top-4 right-4 text-sm font-semibold ${isOverdue ? 'text-red-600' : 'text-green-600'
+                        }`}
+                    >
+                      Vence: <FormattedDate date={invoice.dueDate} />
+                    </div>
+                  );
+                })()}
 
-            {/* Acciones */}
-            <div className="mt-2 flex gap-4">
-              <button
-                onClick={() => onEdit(invoice)}
-                className="text-sm text-blue-500 underline"
-              >
-                Editar
-              </button>
+                {/* Título */}
+                <div className="text-lg font-semibold text-gray-800">
+                  {invoice.supplier} - #{invoice.numeroFactura}
+                </div>
 
-              <button
-                onClick={() => setSelectedToPay(invoice)}
-                className="text-sm text-green-600 underline"
-              >
-                Pagar factura
-              </button>
+                {/* Fecha de creación */}
+                <div className="text-sm text-gray-500">
+                  Fecha de creación: <FormattedDate date={invoice.date} />
+                </div>
 
-              {/* Modal de pago */}
-              {selectedToPay && selectedToPay._id === invoice._id && (
-                <PayInvoiceModal
-                  invoice={selectedToPay}
-                  onClose={() => setSelectedToPay(null)}
-                  onConfirm={handlePay}
-                />
-              )}
+                {/* Monto */}
+                <div className="text-base font-medium text-gray-700">
+                  💵 <FormattedAmount amount={invoice.amountDollars} currency="USD" /> /{' '}
+                  <FormattedAmount
+                    prefix=""
+                    amount={invoice.amountDollars * exchangeRate}
+                    currency="Bs"
+                  />
+                </div>
+
+                {/* Acciones */}
+                <div className="mt-2 flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => onEdit(invoice)}
+                    className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  >
+                    🖉 Editar
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedToPay(invoice)}
+                    className="text-sm px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                  >
+                    💳 Pagar factura
+                  </button>
+
+                  {/* Modal de pago */}
+                  {selectedToPay && selectedToPay._id === invoice._id && (
+                    <PayInvoiceModal
+                      invoice={selectedToPay}
+                      onClose={() => setSelectedToPay(null)}
+                      onConfirm={handlePay}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           </li>
         ))}
       </ul>
+
     </div>
   );
 };

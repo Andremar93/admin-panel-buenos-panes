@@ -74,7 +74,7 @@ export const IncomesChart = ({ incomes }) => {
     }
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white m-6 p-4 rounded-lg shadow max-w-[800px] w-full mx-auto">
             <h2 className="text-xl font-semibold mb-4">Ingresos por Fecha</h2>
             <Line data={chartData} options={options} />
         </div>

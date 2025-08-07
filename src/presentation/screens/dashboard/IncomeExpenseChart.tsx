@@ -33,7 +33,8 @@ export const IncomeExpenseChart = ({ incomes, expenses }: { incomes: number; exp
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
+
+    <div className="bg-white m-6 p-4 rounded-lg shadow max-w-[800px] w-full mx-auto">
       <h2 className="text-xl font-semibold mb-4">Ingresos vs Gastos</h2>
       <Bar data={data} options={options} />
     </div>

@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInvoices } from '@/hooks/useInvoice';
 import { CreateInvoiceDTOType } from '@/presentation/dtos/invoice/CreateInvoiceDto';
 import { CreateInvoiceForm } from '@/presentation/screens/invoice/CreateInvoiceForm';
 import { EditInvoiceForm } from '@/presentation/screens/invoice/EditInvoiceForm';
 import { InvoiceList } from '@/presentation/screens/invoice/InvoiceList';
 import { UpdateInvoiceDTOType } from '@/presentation/dtos/invoice/UpdateInvoiceDto';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 
 export const InvoicePage = () => {
   const { invoices, loading, error, updateInvoice, createInvoice, deleteInvoice } = useInvoices();
+  const { exchangeRate, getExchangeRate } = useExchangeRate();
   const [selectedInvoice, setSelectedInvoice] = useState<UpdateInvoiceDTOType | null>(null);
+
+  useEffect(() => {
+    getExchangeRate(new Date().toISOString().split('T')[0]);
+  }, []);
 
   // const onDelete = async (invoiceId: string) => {
   //   await deleteInvoice(invoiceId);
@@ -41,6 +47,7 @@ export const InvoicePage = () => {
       <InvoiceList
         invoices={invoices}
         loading={loading}
+        exchangeRate={exchangeRate}
         // onDelete={onDelete}
         error={error}
         onEdit={setSelectedInvoice}

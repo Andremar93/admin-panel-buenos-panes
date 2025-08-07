@@ -212,46 +212,38 @@ export const DashboardPage = () => {
             </button>
           </div>
 
+          <div className="flex gap-4">
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-2">Total Ingresos</h2>
+              <p className="text-2xl font-bold text-green-600">
+                <FormattedAmount amount={totalIngresosUSD} currency="USD" />
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-2">Total Gastos</h2>
+              <p className="text-2xl font-bold text-red-600">
+                <FormattedAmount amount={totalsExpenses.amountDollars} currency="USD" />
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-2">Total Facturas</h2>
+              <p className="text-2xl font-bold text-blue-600">
+                <FormattedAmount amount={totalPendienteDolares} currency="USD" />
+              </p>
+            </div>
+          </div>
+
         </div>
-        <h1 className="text-3xl font-semibold mb-4">Dashboard</h1>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">Total Ingresos</h2>
-            <p className="text-2xl font-bold text-green-600">
-              <FormattedAmount amount={totalIngresosUSD} currency="USD" />
-            </p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">Total Gastos</h2>
-            <p className="text-2xl font-bold text-red-600">
-              <FormattedAmount amount={totalsExpenses.amountDollars} currency="USD" />
-            </p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">Total Facturas</h2>
-            <p className="text-2xl font-bold text-blue-600">
-              <FormattedAmount amount={totalPendienteDolares} currency="USD" />
-            </p>
-          </div>
-        </div>
-
-        <div>
+        <div className='flex'>
           <IncomeExpenseChart
             incomes={totalIngresosUSD}
             expenses={totalsExpenses.amountDollars}
           />
 
           <IncomesChart incomes={memoizedIncomes} />
-          <IncomesChart
-            incomes={[
-              { date: '2025-07-01', totalAmount: 100 },
-              { date: '2025-07-02', totalAmount: 150 },
-              { date: '2025-07-03', totalAmount: 80 },
-            ]}
-          />
 
         </div>
       </main>
