@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useExpense } from '@/hooks/useExpense'
 import { useIncome } from '@/hooks/useIncome'
@@ -6,7 +6,6 @@ import { useInvoices } from '@/hooks/useInvoice'
 import { FormattedAmount } from '../components/FormattedAmount'
 import { IncomeExpenseChart } from '@/presentation/screens/dashboard/IncomeExpenseChart'
 import { IncomesChart } from '@/presentation/screens/dashboard/IncomesChart'
-import { useMemo } from 'react';
 
 export const DashboardPage = () => {
 
@@ -16,35 +15,11 @@ export const DashboardPage = () => {
   const [startDate, setStartDate] = useState('');
   const [finishDate, setFinishDate] = useState('');
 
+  // Memoizar los ingresos para evitar recálculos
   const memoizedIncomes = useMemo(() => incomes, [incomes]);
 
-  const totalsExpenses = expenses.reduce(
-    (acc, inv) => {
-      const amount = inv.amountDollars || 0;
-      // const rate = inv.rate && inv.rate !== 0 ? inv.rate : 100;
-      acc.efectivoDolares += inv.paymentMethod == 'dolaresEfectivo' ? inv.amountDollars : 0
-      acc.efectivoBs += inv.paymentMethod == 'bsEfectivo' ? inv.amountDollars : 0
-      acc.amountDollars += inv.amountDollars
-      acc.gastosFijos += inv.type == 'gastosFijos' ? inv.amountDollars : 0
-      acc.comprasDiarias += inv.type == 'comprasDiarias' ? inv.amountDollars : 0
-      acc.gastosPersonales += inv.type == 'gastosPersonales' ? inv.amountDollars : 0
-      acc.proveedor += inv.type == 'Proveedor' ? inv.amountDollars : 0
-      acc.gastosExtraordinarios += inv.type == 'gastosExtraordinarios' ? inv.amountDollars : 0
-      return acc;
-    },
-    {
-      efectivoDolares: 0,
-      efectivoBs: 0,
-      amountDollars: 0,
-      gastosFijos: 0,
-      comprasDiarias: 0,
-      gastosPersonales: 0,
-      proveedor: 0,
-      gastosExtraordinarios: 0,
-    }
-  );
-
-  const totalsIncomes = incomes.reduce(
+  // Memoizar el cálculo de totales de ingresos
+  const totalsIncomes = useMemo(() => incomes.reduce(
     (acc, inv) => {
       const rate = inv.rate && inv.rate !== 0 ? inv.rate : 100;
 
@@ -85,31 +60,49 @@ export const DashboardPage = () => {
       gastosBsUSD: 0,
       totalSistema: 0
     }
-  );
+  ), [incomes]);
 
-  const totalIngresosUSD =
+  // Memoizar el total de ingresos en USD
+  const totalIngresosUSD = useMemo(() =>
     totalsIncomes.efectivoDolares +
     totalsIncomes.efectivoBsUSD +
     totalsIncomes.sitefUSD +
     totalsIncomes.pagomovilUSD +
     totalsIncomes.biopagoUSD +
-    totalsIncomes.puntoExternoUSD;
+    totalsIncomes.puntoExternoUSD, [totalsIncomes]
+  );
 
+  // Memoizar el total de gastos
+  const totalGastos = useMemo(() =>
+    expenses.reduce((acc, expense) => acc + (expense.amountDollars || 0), 0), [expenses]
+  );
 
-  const totalPendienteDolares = invoices
+  // Memoizar el total pendiente de facturas
+  const totalPendienteDolares = useMemo(() => invoices
     .filter((inv) => !inv.paid)
-    .reduce((acc, inv) => acc + inv.amountDollars, 0);
+    .reduce((acc, inv) => acc + inv.amountDollars, 0), [invoices]
+  );
 
-  const totalPendienteBs = invoices
+  const totalPendienteBs = useMemo(() => invoices
     .filter((inv) => !inv.paid)
-    .reduce((acc, inv) => acc + inv.amountBs, 0);
+    .reduce((acc, inv) => acc + inv.amountBs, 0), [invoices]
+  );
 
-
-  const handleApplyFilters = () => {
+  // Memoizar la función de aplicación de filtros
+  const handleApplyFilters = useCallback(() => {
     applyFilters(startDate, finishDate);
     applyFiltersIncome(startDate, finishDate);
-  };
+  }, [startDate, finishDate, applyFilters, applyFiltersIncome]);
 
+  // Memoizar la función de cambio de fecha inicial
+  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+  }, []);
+
+  // Memoizar la función de cambio de fecha final
+  const handleFinishDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFinishDate(e.target.value);
+  }, []);
 
   useEffect(() => {
     if (filterRange.from && filterRange.to) {
@@ -118,135 +111,127 @@ export const DashboardPage = () => {
     }
   }, [filterRange]);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  // Memoizar el estado de carga general
+  const isLoading = useMemo(() => 
+    loadingExpenses || loadingIncomes || loadingInvoices, 
+    [loadingExpenses, loadingIncomes, loadingInvoices]
+  );
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
+  // Memoizar si hay errores
+  const hasErrors = useMemo(() => 
+    errorExpenses || errorIncomes || errorInvoices, 
+    [errorExpenses, errorIncomes, errorInvoices]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Cargando dashboard...</div>
+      </div>
+    );
+  }
+
+  if (hasErrors) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <p>Error al cargar datos del dashboard</p>
+          {errorExpenses && <p>Gastos: {errorExpenses}</p>}
+          {errorIncomes && <p>Ingresos: {errorIncomes}</p>}
+          {errorInvoices && <p>Facturas: {errorInvoices}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside
-        className={`bg-gray-800 text-white p-6 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-16'
-          }`}
-      >
-        <div className="flex items-center justify-between">
-          <h2
-            className={`text-2xl font-bold mb-8 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'
-              }`}
-          >
-            Dashboard
-          </h2>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      
+      {/* Filtros de fecha */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="flex gap-4 items-center">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha Inicial
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={handleStartDateChange}
+              className="border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha Final
+            </label>
+            <input
+              type="date"
+              value={finishDate}
+              onChange={handleFinishDateChange}
+              className="border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
           <button
-            onClick={toggleSidebar}
-            className="text-white focus:outline-none"
+            onClick={handleApplyFilters}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-6"
           >
-            {isSidebarOpen ? '«' : '»'}
+            Aplicar Filtros
           </button>
         </div>
-        <ul className="space-y-4">
-          <li>
-            <Link
-              to="/ingresos"
-              className="hover:text-gray-300 block whitespace-nowrap"
-            >
-              {isSidebarOpen ? 'Ingresos' : '💰'}
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/gastos"
-              className="hover:text-gray-300 block whitespace-nowrap"
-            >
-              {isSidebarOpen ? 'Gastos' : '💸'}
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/facturas"
-              className="hover:text-gray-300 block whitespace-nowrap"
-            >
-              {isSidebarOpen ? 'Facturas' : '🧾'}
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/empleados"
-              className="hover:text-gray-300 block whitespace-nowrap"
-            >
-              {isSidebarOpen ? 'Empleados' : '👥'}
-            </Link>
-          </li>
-        </ul>
-      </aside>
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1  p-6">
-        <div className="mb-4 flex items-end justify-start gap-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Desde</label>
-            <input
-              type="date"
-              className="input mb-0"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Hasta</label>
-            <input
-              type="date"
-              className="input mb-0"
-              value={finishDate}
-              onChange={(e) => setFinishDate(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <button
-              className="btn"
-              onClick={handleApplyFilters}
-              disabled={!startDate || !finishDate}
-            >
-              Filtrar
-            </button>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-2">Total Ingresos</h2>
-              <p className="text-2xl font-bold text-green-600">
-                <FormattedAmount amount={totalIngresosUSD} currency="USD" />
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-2">Total Gastos</h2>
-              <p className="text-2xl font-bold text-red-600">
-                <FormattedAmount amount={totalsExpenses.amountDollars} currency="USD" />
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-2">Total Facturas</h2>
-              <p className="text-2xl font-bold text-blue-600">
-                <FormattedAmount amount={totalPendienteDolares} currency="USD" />
-              </p>
-            </div>
-          </div>
-
+      {/* Resumen de totales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Total Ingresos USD</h3>
+          <p className="text-2xl font-bold text-green-600">
+            <FormattedAmount amount={totalIngresosUSD} />
+          </p>
         </div>
-
-        <div className='flex'>
-          <IncomeExpenseChart
-            incomes={totalIngresosUSD}
-            expenses={totalsExpenses.amountDollars}
-          />
-
-          <IncomesChart incomes={memoizedIncomes} />
-
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Total Gastos USD</h3>
+          <p className="text-2xl font-bold text-red-600">
+            <FormattedAmount amount={totalGastos} />
+          </p>
         </div>
-      </main>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Pendiente USD</h3>
+          <p className="text-2xl font-bold text-yellow-600">
+            <FormattedAmount amount={totalPendienteDolares} />
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Pendiente Bs</h3>
+          <p className="text-2xl font-bold text-yellow-600">
+            <FormattedAmount amount={totalPendienteBs} />
+          </p>
+        </div>
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <IncomeExpenseChart incomes={totalIngresosUSD} expenses={totalGastos} />
+        <IncomesChart incomes={memoizedIncomes} />
+      </div>
+
+      {/* Enlaces rápidos */}
+      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Link to="/ingresos" className="bg-blue-500 text-white p-4 rounded-lg text-center hover:bg-blue-600">
+          Gestionar Ingresos
+        </Link>
+        <Link to="/gastos" className="bg-red-500 text-white p-4 rounded-lg text-center hover:bg-red-600">
+          Gestionar Gastos
+        </Link>
+        <Link to="/facturas" className="bg-yellow-500 text-white p-4 rounded-lg text-center hover:bg-yellow-600">
+          Gestionar Facturas
+        </Link>
+        <Link to="/empleados" className="bg-green-500 text-white p-4 rounded-lg text-center hover:bg-green-600">
+          Gestionar Empleados
+        </Link>
+      </div>
     </div>
-  )
-}
+  );
+};

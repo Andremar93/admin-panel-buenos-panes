@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Expense } from '@/domain/model/Expense';
 import { CreateExpenseDTOType } from '@/presentation/dtos/expense/CreateExpenseDto';
 import { UpdateExpenseDTOType } from '@/presentation/dtos/expense/UpdateExpenseDto';
+import { toAppError, getErrorMessage } from '@/types/errors';
 
 import {
   createExpenseUseCase,
@@ -18,11 +19,8 @@ export function useExpense() {
     to: '',
   });
 
-  useEffect(() => {
-    loadExpenses();
-  }, []);
-
-  const loadExpenses = async (filters?: {
+  // Memoizar la función de carga para evitar recreaciones
+  const loadExpenses = useCallback(async (filters?: {
     startDate?: string;
     finishDate?: string;
   }) => {
@@ -30,42 +28,81 @@ export function useExpense() {
     try {
       const data = await fetchExpensesUseCase.execute(filters);
       setExpenses(data.expenses);
-      setFilterRange({ from: data.from, to: data.to });
+      // Si no hay filtros, establecer el rango por defecto
+      if (!filters?.startDate || !filters?.finishDate) {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        setFilterRange({ 
+          from: firstDay.toISOString().split('T')[0], 
+          to: today.toISOString().split('T')[0] 
+        });
+      } else {
+        setFilterRange({ from: filters.startDate, to: filters.finishDate });
+      }
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar gastos');
+    } catch (err: unknown) {
+      const appError = toAppError(err);
+      const errorMessage = getErrorMessage(appError);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const applyFilters = (startDate: string, finishDate: string) => {
+  // Memoizar la función de filtros
+  const applyFilters = useCallback((startDate: string, finishDate: string) => {
     loadExpenses({ startDate, finishDate });
-  };
+  }, [loadExpenses]);
 
-  const createExpense = async (dto: CreateExpenseDTOType) => {
+  // Memoizar la función de creación
+  const createExpense = useCallback(async (dto: CreateExpenseDTOType) => {
     try {
       const created = await createExpenseUseCase.execute(dto);
-      console.log('created from expense', created);
       setExpenses((prev) => [created, ...prev]);
-    } catch (err: any) {
-      console.log('errfrom useExpense');
-      setError(err.message);
+      return created;
+    } catch (err: unknown) {
+      const appError = toAppError(err);
+      const errorMessage = getErrorMessage(appError);
+      setError(errorMessage);
       throw err;
     }
-  };
+  }, []);
 
-  const updateExpense = async (expense: UpdateExpenseDTOType) => {
-    const updated = await updateExpenseUseCase.execute(expense);
-    console.log(`Updated: ${updated}`);
-    setExpenses((prev) =>
-      prev.map((inv) => (inv._id === updated._id ? updated : inv))
-    );
-    return updated;
-  };
+  // Memoizar la función de actualización
+  const updateExpense = useCallback(async (expense: UpdateExpenseDTOType) => {
+    try {
+      const updated = await updateExpenseUseCase.execute(expense);
+      setExpenses((prev) =>
+        prev.map((inv) => (inv._id === updated._id ? updated : inv))
+      );
+      return updated;
+    } catch (err: unknown) {
+      const appError = toAppError(err);
+      const errorMessage = getErrorMessage(appError);
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
+
+  // Memoizar el estado de filtros aplicados
+  const filteredExpenses = useMemo(() => {
+    if (!filterRange.from || !filterRange.to) return expenses;
+    return expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      const fromDate = new Date(filterRange.from);
+      const toDate = new Date(filterRange.to);
+      return expenseDate >= fromDate && expenseDate <= toDate;
+    });
+  }, [expenses, filterRange]);
+
+  // Cargar gastos al montar el componente
+  useEffect(() => {
+    loadExpenses();
+  }, [loadExpenses]);
 
   return {
-    expenses,
+    expenses: filteredExpenses,
+    allExpenses: expenses,
     loading,
     error,
     filterRange,
@@ -73,5 +110,6 @@ export function useExpense() {
     updateExpense,
     applyFilters,
     reload: loadExpenses,
+    clearError: () => setError(null),
   };
 }

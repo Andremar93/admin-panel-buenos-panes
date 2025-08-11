@@ -11,8 +11,8 @@ import {
 } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import { useMemo } from 'react'
-import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { formatInTimeZone } from 'date-fns-tz';
 
 ChartJS.register(
     LineElement,
@@ -26,16 +26,23 @@ ChartJS.register(
 
 export const IncomesChart = ({ incomes }) => {
     // Ordenar los ingresos por fecha
+
     const sortedIncomes = useMemo(() => {
+        console.log(incomes)
         return [...incomes].sort(
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         )
     }, [incomes])
 
+    // Calcular promedio
+    const average =
+        sortedIncomes.reduce((sum, income) => sum + (income.totalSistema || 0), 0) /
+        sortedIncomes.length;
+
     // Preparar datos para Chart.js
     const chartData = {
         labels: sortedIncomes.map((income) =>
-            format(new Date(income.date), 'dd/MM', { locale: es })
+            formatInTimeZone(income.date, 'UTC', 'dd/MM', { locale: es })
         ),
         datasets: [
             {
@@ -48,8 +55,17 @@ export const IncomesChart = ({ incomes }) => {
                 pointRadius: 4,
                 pointHoverRadius: 6,
             },
+            {
+                label: `Promedio: $${average.toFixed(2)}`,
+                data: Array(sortedIncomes.length).fill(average),
+                borderColor: '#EF4444', // rojo para destacar
+                borderDash: [6, 6], // línea punteada
+                pointRadius: 0, // sin puntos
+                fill: false,
+            },
         ],
-    }
+    };
+
 
     const options = {
         responsive: true,

@@ -20,8 +20,8 @@ export function EmployeePage() {
     }, []);
 
     return (
-        <div style={{ display: 'flex', gap: 20, padding: 20 }}>
-            <div style={{ flex: 1, borderRight: '1px solid #ccc', paddingRight: 20 }}>
+        <div style={{ display: 'flex', gap: 20, padding: 20, flexDirection: 'column' }}>
+            <div style={{}}>
                 <CreateEmployeeSalary
                     onCreated={handleCreated}
                     employees={employees}

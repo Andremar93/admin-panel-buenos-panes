@@ -1,40 +1,55 @@
-import { Expense, toUpdateExpenseData } from '@/domain/model/Expense';
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Expense } from '@/domain/model/Expense';
 import { FormattedAmount } from '../components/FormattedAmount';
+import { FormattedDate } from '../components/FormattedDate';
+
 interface Props {
   expenses: Expense[];
   loading: boolean;
   error: string | null;
-  onEdit: (expense: Expense) => void;
+  onEdit: (expense: any) => void;
   startDate: string;
   finishDate: string;
-  setStartDate: (value: string) => void;
-  setFinishDate: (value: string) => void;
+  setStartDate: (date: string) => void;
+  setFinishDate: (date: string) => void;
   onFilter: () => void;
 }
 
-export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit, startDate, finishDate, setStartDate, setFinishDate, onFilter }) => {
+export const ExpenseList: React.FC<Props> = ({ 
+  expenses, 
+  loading, 
+  error, 
+  onEdit, 
+  startDate, 
+  finishDate, 
+  setStartDate, 
+  setFinishDate, 
+  onFilter 
+}) => {
 
   const [filterText, setFilterText] = useState('');
 
-  const filteredExpenses = expenses.filter((expense) =>
-    `${expense.description} ${expense.type} ${expense.subType}`
-      .toLowerCase()
-      .includes(filterText.toLowerCase())
+  // Memoizar gastos filtrados por texto
+  const filteredExpenses = useMemo(() => 
+    expenses.filter((expense) =>
+      `${expense.description} ${expense.type} ${expense.subType || ''}`
+        .toLowerCase()
+        .includes(filterText.toLowerCase())
+    ), [expenses, filterText]
   );
 
-  const totals = filteredExpenses.reduce(
+  // Memoizar cálculos de totales
+  const totals = useMemo(() => filteredExpenses.reduce(
     (acc, inv) => {
       const amount = inv.amountDollars || 0;
-      // const rate = inv.rate && inv.rate !== 0 ? inv.rate : 100;
-      acc.efectivoDolares += inv.paymentMethod == 'dolaresEfectivo' ? inv.amountDollars : 0
-      acc.efectivoBs += inv.paymentMethod == 'bsEfectivo' ? inv.amountDollars : 0
-      acc.amountDollars += inv.amountDollars
-      acc.gastosFijos += inv.type == 'gastosFijos' ? inv.amountDollars : 0
-      acc.comprasDiarias += inv.type == 'comprasDiarias' ? inv.amountDollars : 0
-      acc.gastosPersonales += inv.type == 'gastosPersonales' ? inv.amountDollars : 0
-      acc.proveedor += inv.type == 'Proveedor' ? inv.amountDollars : 0
-      acc.gastosExtraordinarios += inv.type == 'gastosExtraordinarios' ? inv.amountDollars : 0
+      acc.efectivoDolares += inv.paymentMethod === 'dolaresEfectivo' ? inv.amountDollars : 0;
+      acc.efectivoBs += inv.paymentMethod === 'bsEfectivo' ? inv.amountDollars : 0;
+      acc.amountDollars += inv.amountDollars;
+      acc.gastosFijos += inv.type === 'gastosFijos' ? inv.amountDollars : 0;
+      acc.comprasDiarias += inv.type === 'comprasDiarias' ? inv.amountDollars : 0;
+      acc.gastosPersonales += inv.type === 'gastosPersonales' ? inv.amountDollars : 0;
+      acc.proveedor += inv.type === 'Proveedor' ? inv.amountDollars : 0;
+      acc.gastosExtraordinarios += inv.type === 'gastosExtraordinarios' ? inv.amountDollars : 0;
       return acc;
     },
     {
@@ -47,156 +62,184 @@ export const ExpenseList: React.FC<Props> = ({ expenses, loading, error, onEdit,
       proveedor: 0,
       gastosExtraordinarios: 0,
     }
+  ), [filteredExpenses]);
+
+  // Memoizar función de cambio de filtro de texto
+  const handleFilterTextChange = useMemo(() => 
+    (e: React.ChangeEvent<HTMLInputElement>) => setFilterText(e.target.value), 
+    []
   );
 
+  // Memoizar función de cambio de fecha inicial
+  const handleStartDateChange = useMemo(() => 
+    (e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value), 
+    [setStartDate]
+  );
+
+  // Memoizar función de cambio de fecha final
+  const handleFinishDateChange = useMemo(() => 
+    (e: React.ChangeEvent<HTMLInputElement>) => setFinishDate(e.target.value), 
+    [setFinishDate]
+  );
 
   if (loading) return <p className="text-gray-500">Cargando gastos...</p>;
   if (error) return <p className="text-red-600 font-medium">Error: {error}</p>;
   if (expenses.length === 0) return <p className="text-gray-400">No hay gastos registrados.</p>;
 
   return (
-
-    <div style={{ flex: 1, paddingLeft: 20 }}>
-
-      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-xl shadow-sm">
-        <h3 className="text-base font-semibold text-yellow-800 mb-3">💰 Totales Gastos: <FormattedAmount amount={totals.amountDollars} currency="USD" /></h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-yellow-900">
-          {/* Efectivo */}
+    <div className="flex-1">
+      <h2 className="text-xl font-semibold mb-4">Lista de Gastos</h2>
+      
+      {/* Filtros */}
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <div className="flex gap-4 items-end mb-4">
           <div>
-            <p className="font-medium">💵 Efectivo USD:
-              <FormattedAmount amount={totals.efectivoDolares} currency="USD" />
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha Inicial
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={handleStartDateChange}
+              className="border border-gray-300 rounded px-3 py-2"
+            />
           </div>
-
           <div>
-            <p className="font-medium">💴 Efectivo Bs:
-              <FormattedAmount amount={totals.efectivoBs} currency="USD" />
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha Final
+            </label>
+            <input
+              type="date"
+              value={finishDate}
+              onChange={handleFinishDateChange}
+              className="border border-gray-300 rounded px-3 py-2"
+            />
           </div>
-
-          {/* Detalles de gastos */}
-          <div>
-            <p className="font-medium">🧾 Gastos Fijos:
-              <FormattedAmount amount={totals.gastosFijos} currency="USD" />
-            </p>
-          </div>
-
-          <div>
-            <p className="font-medium">🛒 Compras Diarias:
-              <FormattedAmount amount={totals.comprasDiarias} currency="USD" />
-            </p>
-          </div>
-
-          <div>
-            <p className="font-medium">👤 Gastos Personales:
-              <FormattedAmount amount={totals.gastosPersonales} currency="USD" />
-            </p>
-          </div>
-
-          <div>
-            <p className="font-medium">🏭 Proveedores:
-              <FormattedAmount amount={totals.proveedor} currency="USD" />
-            </p>
-          </div>
-
-          <div>
-            <p className="font-medium">⚠️ Gastos Extraordinarios:
-              <FormattedAmount amount={totals.gastosExtraordinarios} currency="USD" />
-            </p>
-          </div>
+          <button
+            onClick={onFilter}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Filtrar
+          </button>
         </div>
-
-      </div>
-
-      <input
-        type="text"
-        placeholder="Buscar gasto:"
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-        className="input mb-4"
-      />
-
-      <div className="mb-4 flex items-end gap-4">
+        
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Desde</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Buscar por descripción, tipo o subtipo
+          </label>
           <input
-            type="date"
-            className="input"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            type="text"
+            value={filterText}
+            onChange={handleFilterTextChange}
+            placeholder="Buscar gastos..."
+            className="border border-gray-300 rounded px-3 py-2 w-full"
           />
         </div>
-
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Hasta</label>
-          <input
-            type="date"
-            className="input"
-            value={finishDate}
-            onChange={(e) => setFinishDate(e.target.value)}
-          />
-        </div>
-
-        <button
-          className="btn"
-          onClick={onFilter}
-          disabled={!startDate || !finishDate}
-        >
-          Filtrar
-        </button>
       </div>
 
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Gastos:</h2>
-      <ul className="space-y-4">
-        {filteredExpenses.map((expense) => (
-          <li key={expense._id} className="bg-white p-4 rounded-lg shadow flex flex-col space-y-2 text-sm">
-            {/* Descripción + Fecha */}
-            <div className="flex justify-between items-start">
-              <div className="text-base font-semibold text-primary">{expense.description}</div>
-              <div className="text-xs text-gray-500">{new Date(expense.date).toLocaleDateString()}</div>
-            </div>
+      {/* Resumen de totales */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-3 rounded-lg shadow text-center">
+          <h4 className="text-sm font-medium text-gray-500">Total USD</h4>
+          <p className="text-lg font-bold text-blue-600">
+            <FormattedAmount amount={totals.amountDollars} />
+          </p>
+        </div>
+        <div className="bg-white p-3 rounded-lg shadow text-center">
+          <h4 className="text-sm font-medium text-gray-500">Efectivo USD</h4>
+          <p className="text-lg font-bold text-green-600">
+            <FormattedAmount amount={totals.efectivoDolares} />
+          </p>
+        </div>
+        <div className="bg-white p-3 rounded-lg shadow text-center">
+          <h4 className="text-sm font-medium text-gray-500">Efectivo Bs</h4>
+          <p className="text-lg font-bold text-yellow-600">
+            <FormattedAmount amount={totals.efectivoBs} />
+          </p>
+        </div>
+        <div className="bg-white p-3 rounded-lg shadow text-center">
+          <h4 className="text-sm font-medium text-gray-500">Gastos Fijos</h4>
+          <p className="text-lg font-bold text-red-600">
+            <FormattedAmount amount={totals.gastosFijos} />
+          </p>
+        </div>
+      </div>
 
-            {/* Etiquetas: tipo y método de pago */}
-            <div className="flex flex-wrap gap-2">
-              <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full border border-yellow-300">
-                {expense.type}
-              </span>
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-300">
-                {expense.paymentMethod}
-              </span>
-            </div>
-
-            {/* Montos */}
-            <div className="flex justify-between text-gray-700">
-              <span className="font-medium">Monto USD:</span>
-              <span>
-                <FormattedAmount amount={expense.amountDollars} currency="USD" />
-              </span>
-            </div>
-            <div className="flex justify-between text-gray-700">
-              <span className="font-medium">Monto Bs:</span>
-              <FormattedAmount amount={expense.amountBs} currency="Bs" />
-            </div>
-
-            {/* Botón editar */}
-            <button
-              onClick={() => {
-                // Scroll al tope de la página
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                // Lógica de edición
-                onEdit(toUpdateExpenseData(expense));
-              }}
-              className="mt-2 text-blue-500 underline self-start"
-            >
-              Editar
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* Lista de gastos */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Descripción
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tipo
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Método de Pago
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Monto USD
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Fecha
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredExpenses.map((expense) => (
+              <tr key={expense._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {expense.description}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {expense.type}
+                  </span>
+                  {expense.subType && (
+                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {expense.subType}
+                    </span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {expense.paymentMethod}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <FormattedAmount amount={expense.amountDollars} />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <FormattedDate date={expense.date} />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    expense.paid 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {expense.paid ? 'Pagado' : 'Pendiente'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    onClick={() => onEdit(expense)}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-
-
-
   );
 };

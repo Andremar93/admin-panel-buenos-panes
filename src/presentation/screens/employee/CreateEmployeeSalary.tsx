@@ -144,16 +144,34 @@ export const CreateEmployeeSalary: React.FC<Props> = ({ onCreated, employees, ex
                                     <label>Descuento USD</label>
                                     <input
                                         type="number"
-                                        {...register(`salaries.${index}.usdDiscounts`, { valueAsNumber: true })}
+                                        step="0.01"
                                         className="input"
+                                        {...register(`salaries.${index}.usdDiscounts`, {
+                                            setValueAs: (v) => {
+                                                if (typeof v === 'string') {
+                                                    const replaced = v.replace(',', '.');
+                                                    return parseFloat(replaced);
+                                                }
+                                                return v;
+                                            },
+                                        })}
                                     />
                                 </div>
                                 <div>
                                     <label>Descuento Bs</label>
                                     <input
                                         type="number"
-                                        {...register(`salaries.${index}.bsDiscounts`, { valueAsNumber: true })}
+                                        step="0.01"
                                         className="input"
+                                        {...register(`salaries.${index}.bsDiscounts`, {
+                                            setValueAs: (v) => {
+                                                if (typeof v === 'string') {
+                                                    const replaced = v.replace(',', '.');
+                                                    return parseFloat(replaced);
+                                                }
+                                                return v;
+                                            },
+                                        })}
                                     />
                                 </div>
                             </div>

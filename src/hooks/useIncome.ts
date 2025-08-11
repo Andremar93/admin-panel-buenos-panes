@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Income } from '@/domain/model/Income';
 import {
   CreateIncomeDTO,
@@ -23,12 +23,8 @@ export function useIncome() {
     to: '',
   });
 
-  useEffect(() => {
-    console.log('LOADING INCOME')
-    loadIncomes();
-  }, []);
-
-  const loadIncomes = async (filters?: {
+  // Memoizar la función de carga para evitar recreaciones
+  const loadIncomes = useCallback(async (filters?: {
     startDate?: string;
     finishDate?: string;
   }) => {
@@ -38,46 +34,71 @@ export function useIncome() {
       setIncomes(data.incomes);
       setFilterRange({ from: data.from, to: data.to });
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar ingresos');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar ingresos';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const applyFilters = (startDate: string, finishDate: string) => {
+  // Memoizar la función de filtros
+  const applyFilters = useCallback((startDate: string, finishDate: string) => {
     loadIncomes({ startDate, finishDate });
-  };
+  }, [loadIncomes]);
 
-  const createIncome = async (dto: CreateIncomeDTOType) => {
+  // Memoizar la función de creación
+  const createIncome = useCallback(async (dto: CreateIncomeDTOType) => {
     try {
       const created = await createIncomeUseCase.execute(dto);
-      console.log('created', created);
       setIncomes((prev) => [created, ...prev]);
-    } catch (err: any) {
-      console.log('errfrom useincome');
-      setError(err.message);
+      return created;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al crear ingreso';
+      setError(errorMessage);
       throw err;
     }
-  };
+  }, []);
 
-  const updateIncome = async (
+  // Memoizar la función de actualización
+  const updateIncome = useCallback(async (
     income: UpdateIncomeDTOType,
     incomeId: String
   ) => {
-    const updated = await updateIncomeUseCase.execute(income, incomeId);
+    try {
+      const updated = await updateIncomeUseCase.execute(income, incomeId);
+      setIncomes((prev) =>
+        prev.map((inv) =>
+          String(inv._id) === String(updated._id) ? updated : inv
+        )
+      );
+      return updated;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar ingreso';
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
-    setIncomes((prev) =>
-      prev.map((inv) =>
-        String(inv._id) === String(updated._id) ? updated : inv
-      )
-    );
+  // Memoizar el estado de filtros aplicados
+  const filteredIncomes = useMemo(() => {
+    if (!filterRange.from || !filterRange.to) return incomes;
+    return incomes.filter(income => {
+      const incomeDate = new Date(income.date);
+      const fromDate = new Date(filterRange.from);
+      const toDate = new Date(filterRange.to);
+      return incomeDate >= fromDate && incomeDate <= toDate;
+    });
+  }, [incomes, filterRange]);
 
-    return updated;
-  };
+  // Cargar ingresos al montar el componente
+  useEffect(() => {
+    loadIncomes();
+  }, [loadIncomes]);
 
   return {
-    incomes,
+    incomes: filteredIncomes,
+    allIncomes: incomes,
     loading,
     error,
     filterRange,
@@ -85,5 +106,6 @@ export function useIncome() {
     updateIncome,
     applyFilters,
     reload: loadIncomes,
+    clearError: () => setError(null),
   };
 }

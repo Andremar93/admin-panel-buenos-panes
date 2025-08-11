@@ -1,5 +1,5 @@
 // hooks/useLogin.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -13,30 +13,31 @@ export const useEmployee = () => {
     const navigate = useNavigate();
     const [employees, setEmployees] = useState<Employee[]>([]);
 
-
-    useEffect(() => {
-        loadEmployees();
-    }, []);
-
-
-    const loadEmployees = async () => {
+    // Memoizar la función de carga para evitar recreaciones
+    const loadEmployees = useCallback(async () => {
         setLoading(true);
         try {
             const data = await fetchEmployeesUseCase.execute();
             setEmployees(data);
             setError(null);
-        } catch (err: any) {
-            setError(err.message || 'Error al cargar los empleados.');
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Error al cargar los empleados.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Cargar empleados al montar el componente
+    useEffect(() => {
+        loadEmployees();
+    }, [loadEmployees]);
 
     return {
         employees,
         loading,
         error,
-        reload: loadEmployees
-    }
-
+        reload: loadEmployees,
+        clearError: () => setError(null),
+    };
 };
