@@ -228,8 +228,11 @@ export const DashboardPage = () => {
         <Link to="/facturas" className="bg-yellow-500 text-white p-4 rounded-lg text-center hover:bg-yellow-600">
           Gestionar Facturas
         </Link>
-        <Link to="/empleados" className="bg-green-500 text-white p-4 rounded-lg text-center hover:bg-green-600">
-          Gestionar Empleados
+        <Link to="/salarios" className="bg-green-500 text-white p-4 rounded-lg text-center hover:bg-green-600">
+          Gestionar Salarios
+        </Link>
+        <Link to="/deudas-empleados" className="bg-green-500 text-white p-4 rounded-lg text-center hover:bg-green-600">
+          Gestionar Deudas Empleados
         </Link>
       </div>
     </div>

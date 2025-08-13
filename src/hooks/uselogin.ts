@@ -10,15 +10,16 @@ export const useLogin = () => {
   const navigate = useNavigate();
 
   // Memoizar la función de login para evitar recreaciones
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
-      const user = await loginUseCase.execute(email, password);
-      if (user.token) {
-        localStorage.setItem('auth_token', user.token);
-        localStorage.setItem('user', JSON.stringify(user.user));
-        user.user.userType === 'admin'
+      const user = await loginUseCase.execute(username, password);
+      console.log(user)
+      if (user.data.token) {
+        localStorage.setItem('auth_token', user.data.token);
+        localStorage.setItem('user', JSON.stringify(user.data.user));
+        user.data.user.userType === 'admin'
           ? navigate('/dashboard')
           : navigate('/caja');
       }

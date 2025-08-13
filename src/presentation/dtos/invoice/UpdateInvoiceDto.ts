@@ -4,7 +4,6 @@ import { z } from 'zod';
 
 export const UpdateInvoiceDTO = z.object({
   _id: z.string(),
-  dueDate: z.string().or(z.date()),
   supplier: z.string().min(1, 'Proveedor requerido'),
   type: z.string().min(1, 'Tipo requerido'),
   amount: z.number(),

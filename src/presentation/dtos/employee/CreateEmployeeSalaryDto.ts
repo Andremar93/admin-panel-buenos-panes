@@ -15,3 +15,4 @@ export const CreateEmployeeSalaryDTO = z.object({
 
 // Tipo TypeScript inferido desde el esquema zod
 export type CreateEmployeeSalaryDTOType = z.infer<typeof CreateEmployeeSalaryDTO>;
+
