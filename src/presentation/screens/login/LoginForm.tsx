@@ -13,25 +13,34 @@ export const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
-      <input
-        className="input"
-        type="username"
-        value={username}
-        onChange={e => setUsername(e.target.value)}
-        placeholder="Username"
-      />
-      <input
-        className="input"
-        type="password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button className="btn mt-2" type="submit" disabled={loading}>
+    <form onSubmit={handleSubmit} className="form-container space-y-4">
+      <h2 className="form-title text-center">Iniciar Sesión</h2>
+      
+      <div className="form-group">
+        <input
+          className="form-input"
+          type="username"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          placeholder="Username"
+        />
+      </div>
+      
+      <div className="form-group">
+        <input
+          className="form-input"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Password"
+        />
+      </div>
+      
+      <button className="btn btn-primary w-full" type="submit" disabled={loading}>
         {loading ? 'Cargando...' : 'Entrar'}
       </button>
-      {error && <p className="error-message">{error}</p>}
+      
+      {error && <p className="form-error text-center">{error}</p>}
     </form>
   )
 }

@@ -97,14 +97,18 @@ export const InvoiceList: React.FC<Props> = ({
       </div>
 
       {/* Filtro */}
-      <input
-        type="text"
-        placeholder="Buscar por proveedor o número de factura"
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-        className="input mb-4"
-      />
-
+      <form className="form-form-container form-container-no-shadow">
+        <div className="form-group">
+          <label className="form-label">Buscar por proveedor o número de factura</label>
+          <input
+            type="text"
+            placeholder="Buscar por proveedor o número de factura"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            className="form-input mb-4"
+          />
+        </div>
+      </form>
       {/* Encabezado */}
       <h2 className="text-xl font-bold text-gray-800 mb-4">Facturas:</h2>
 

@@ -1,4 +1,4 @@
-// CreateExpenseDTO.ts
+// UpdateExpenseDTO.ts
 
 import { z } from 'zod';
 
@@ -12,6 +12,7 @@ export const UpdateExpenseDTO = z.object({
   paymentMethod: z.string().min(1, 'El metodo de pago es requerido'),
   description: z.string().min(1, 'La descripción es requerida'),
   date: z.string().or(z.date()),
+  paid: z.boolean().optional(),
 });
 
 // Tipo TypeScript inferido desde el esquema zod

@@ -34,33 +34,62 @@ export function IncomePage() {
 
 
   return (
-    <div style={{ display: 'flex', gap: 20, padding: 20 }}>
-      <div style={{ flex: 1, borderRight: '1px solid #ccc', paddingRight: 20 }}>
-        {error && <p className="text-red-600 font-medium">{error}</p>}
-
-        {selectedIncome ? (
-          <EditIncomeForm
-            initialData={selectedIncome}
-            onCancel={() => setSelectedIncome(null)}
-            onUpdated={handleUpdated}
-          />
-        ) : (
-          <CreateIncomeForm onCreated={handleCreated} />
-        )}
+    <div className="page-container">
+      <div className="page-header">
+        <h1 className="page-title">Gestión de Facturas</h1>
+        <p className="page-subtitle">
+          Crea nuevas facturas de proveedores y administra las existentes
+        </p>
       </div>
 
-      <IncomeList
-        incomes={incomes}
-        loading={loading}
-        error={error}
-        onEdit={setSelectedIncome}
-        startDate={startDate}
-        finishDate={finishDate}
-        setStartDate={setStartDate}
-        setFinishDate={setFinishDate}
-        onFilter={() => applyFilters(startDate, finishDate)}
-      />
+      {error && <p className="text-red-600 font-medium">{error}</p>}
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Columna Izquierda - Formulario */}
+        <div className="space-y-6">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-lg font-semibold text-gray-900">
+
+                {selectedIncome ? 'Editar Ingreso' : ' Crear Nuevo Ingreso'}
+              </h2>
+            </div>
+            <div className="card-body">
+              {selectedIncome ? (
+                <EditIncomeForm
+                  initialData={selectedIncome}
+                  onCancel={() => setSelectedIncome(null)}
+                  onUpdated={handleUpdated}
+                />
+              ) : (
+                <CreateIncomeForm onCreated={handleCreated} />
+              )}
+            </div>
+          </div>
+        </div>
+
+
+        <div className="space-y-6">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-lg font-semibold text-gray-900">Lista de Facturas</h2>
+            </div>
+            <div className="card-body">
+              <IncomeList
+                incomes={incomes}
+                loading={loading}
+                error={error}
+                onEdit={setSelectedIncome}
+                startDate={startDate}
+                finishDate={finishDate}
+                setStartDate={setStartDate}
+                setFinishDate={setFinishDate}
+                onFilter={() => applyFilters(startDate, finishDate)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  )
-}
+  );
+};

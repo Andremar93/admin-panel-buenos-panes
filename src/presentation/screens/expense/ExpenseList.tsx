@@ -88,7 +88,6 @@ export const ExpenseList: React.FC<Props> = ({
 
   return (
     <div className="flex-1">
-      <h2 className="text-xl font-semibold mb-4">Lista de Gastos</h2>
       
       {/* Filtros */}
       <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -166,7 +165,7 @@ export const ExpenseList: React.FC<Props> = ({
       </div>
 
       {/* Lista de gastos */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-hidden max-h-[600px] overflow-y-auto pr-2">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -183,10 +182,10 @@ export const ExpenseList: React.FC<Props> = ({
                 Monto USD
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fecha
+                Monto Bs
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
+                Fecha
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
@@ -215,17 +214,11 @@ export const ExpenseList: React.FC<Props> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   <FormattedAmount amount={expense.amountDollars} />
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <FormattedAmount amount={expense.amountBs} />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <FormattedDate date={expense.date} />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    expense.paid 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {expense.paid ? 'Pagado' : 'Pendiente'}
-                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button

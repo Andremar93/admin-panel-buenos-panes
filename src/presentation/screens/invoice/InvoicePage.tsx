@@ -16,12 +16,8 @@ export const InvoicePage = () => {
     getExchangeRate(new Date().toISOString().split('T')[0]);
   }, []);
 
-  // const onDelete = async (invoiceId: string) => {
-  //   await deleteInvoice(invoiceId);
-  // }
-
   const handleCreated = async (data: CreateInvoiceDTOType) => {
-    await createInvoice(data); // esto actualiza el estado del hook
+    await createInvoice(data);
   };
 
   const handleUpdated = async (invoiceId: string, data: UpdateInvoiceDTOType) => {
@@ -29,30 +25,55 @@ export const InvoicePage = () => {
   };
 
   return (
-    <div style={{ display: 'flex', gap: 20, padding: 20 }}>
-
-      <div style={{ flex: 1, borderRight: '1px solid #ccc', paddingRight: 20 }}>
-
-        {selectedInvoice ? (
-          <EditInvoiceForm
-            initialData={selectedInvoice}
-            onCancel={() => setSelectedInvoice(null)}
-            onUpdated={handleUpdated}
-          />
-        ) : (
-          <CreateInvoiceForm onCreated={handleCreated} />
-        )}
+    <div className="page-container">
+      <div className="page-header">
+        <h1 className="page-title">Gestión de Facturas</h1>
+        <p className="page-subtitle">
+          Crea nuevas facturas de proveedores y administra las existentes
+        </p>
       </div>
 
-      <InvoiceList
-        invoices={invoices}
-        loading={loading}
-        exchangeRate={exchangeRate}
-        // onDelete={onDelete}
-        error={error}
-        onEdit={setSelectedInvoice}
-      />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Columna Izquierda - Formulario */}
+        <div className="space-y-6">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {selectedInvoice ? 'Editar Factura' : 'Crear Nueva Factura'}
+              </h2>
+            </div>
+            <div className="card-body">
+              {selectedInvoice ? (
+                <EditInvoiceForm
+                  initialData={selectedInvoice}
+                  onCancel={() => setSelectedInvoice(null)}
+                  onUpdated={handleUpdated}
+                />
+              ) : (
+                <CreateInvoiceForm onCreated={handleCreated} />
+              )}
+            </div>
+          </div>
+        </div>
 
+        {/* Columna Derecha - Lista de Facturas */}
+        <div className="space-y-6">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-lg font-semibold text-gray-900">Lista de Facturas</h2>
+            </div>
+            <div className="card-body">
+              <InvoiceList
+                invoices={invoices}
+                loading={loading}
+                exchangeRate={exchangeRate}
+                error={error}
+                onEdit={setSelectedInvoice}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

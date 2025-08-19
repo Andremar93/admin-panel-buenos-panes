@@ -6,6 +6,7 @@ import { useInvoices } from '@/hooks/useInvoice'
 import { FormattedAmount } from '../components/FormattedAmount'
 import { IncomeExpenseChart } from '@/presentation/screens/dashboard/IncomeExpenseChart'
 import { IncomesChart } from '@/presentation/screens/dashboard/IncomesChart'
+import { IncomeExpenseLineChart } from './IncomeExpenseLineChart'
 
 export const DashboardPage = () => {
 
@@ -72,6 +73,12 @@ export const DashboardPage = () => {
     totalsIncomes.puntoExternoUSD, [totalsIncomes]
   );
 
+  // Total efectivo USD (dólares + efectivo en Bs convertido a USD)
+  const totalEfectivoUSD = useMemo(() =>
+    totalsIncomes.efectivoDolares + totalsIncomes.efectivoBsUSD,
+    [totalsIncomes]
+  );
+
   // Memoizar el total de gastos
   const totalGastos = useMemo(() =>
     expenses.reduce((acc, expense) => acc + (expense.amountDollars || 0), 0), [expenses]
@@ -112,14 +119,14 @@ export const DashboardPage = () => {
   }, [filterRange]);
 
   // Memoizar el estado de carga general
-  const isLoading = useMemo(() => 
-    loadingExpenses || loadingIncomes || loadingInvoices, 
+  const isLoading = useMemo(() =>
+    loadingExpenses || loadingIncomes || loadingInvoices,
     [loadingExpenses, loadingIncomes, loadingInvoices]
   );
 
   // Memoizar si hay errores
-  const hasErrors = useMemo(() => 
-    errorExpenses || errorIncomes || errorInvoices, 
+  const hasErrors = useMemo(() =>
+    errorExpenses || errorIncomes || errorInvoices,
     [errorExpenses, errorIncomes, errorInvoices]
   );
 
@@ -146,40 +153,41 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      
+    <div className="page-container">
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+      </div>
+
       {/* Filtros de fecha */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="flex gap-4 items-center">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha Inicial
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={handleStartDateChange}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
+      <div className="card mb-6">
+        <div className="card-body">
+          <h3 className="text-lg font-semibold mb-4">Filtros de fecha</h3>
+          <div className="flex gap-4 items-end">
+            <div className="form-group">
+              <label className="form-label">Fecha Inicial</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={handleStartDateChange}
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Fecha Final</label>
+              <input
+                type="date"
+                value={finishDate}
+                onChange={handleFinishDateChange}
+                className="form-input"
+              />
+            </div>
+            <button
+              onClick={handleApplyFilters}
+              className="btn btn-primary"
+            >
+              Aplicar Filtros
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha Final
-            </label>
-            <input
-              type="date"
-              value={finishDate}
-              onChange={handleFinishDateChange}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <button
-            onClick={handleApplyFilters}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-6"
-          >
-            Aplicar Filtros
-          </button>
         </div>
       </div>
 
@@ -189,6 +197,12 @@ export const DashboardPage = () => {
           <h3 className="text-sm font-medium text-gray-500">Total Ingresos USD</h3>
           <p className="text-2xl font-bold text-green-600">
             <FormattedAmount amount={totalIngresosUSD} />
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500">Total Ingresos Efectivo USD</h3>
+          <p className="text-2xl font-bold text-green-600">
+            <FormattedAmount amount={totalEfectivoUSD} />
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
@@ -214,8 +228,17 @@ export const DashboardPage = () => {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <IncomeExpenseChart incomes={totalIngresosUSD} expenses={totalGastos} />
+        <IncomeExpenseLineChart
+          title="Ingresos vs Egresos por Fecha"
+          incomes={memoizedIncomes}
+          expenses={expenses}
+          incomeAmountKey="totalSistema"
+          expenseAmountKey="amountDollars"
+        />
         <IncomesChart incomes={memoizedIncomes} />
       </div>
+
+
 
       {/* Enlaces rápidos */}
       <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">

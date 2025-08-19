@@ -10,7 +10,8 @@ export const CreateEmployeeSalaryDTO = z.object({
     bsDiscounts: z.number().nonnegative(),
     usdDiscounts: z.number().nonnegative(),
     extraDescription: z.string().optional(),
-    netUSD: z.number().nonnegative()
+    netUSD: z.number().nonnegative(),
+    usdBonus: z.number().nonnegative().optional(),
 });
 
 // Tipo TypeScript inferido desde el esquema zod

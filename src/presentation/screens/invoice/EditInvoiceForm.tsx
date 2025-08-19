@@ -3,10 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UpdateInvoiceDTOType, UpdateInvoiceDTO } from '@/presentation/dtos/invoice/UpdateInvoiceDto';
 import { Invoice } from '@/domain/model/Invoice';
+import { Button, Input, Alert } from '@/presentation/components/ui';
 
 interface Props {
   initialData: Invoice;
-  onUpdated: (id: string, data: Partial<Invoice>) => void;
+  onUpdated: (id: string, data: UpdateInvoiceDTOType) => void;
   onCancel: () => void;
 }
 
@@ -46,8 +47,7 @@ export const EditInvoiceForm: React.FC<Props> = ({ initialData, onUpdated, onCan
       googleRow: initialData.googleRow,
       numeroFactura: initialData.numeroFactura || '',
     });
-  }, [initialData]);
-
+  }, [initialData, reset]);
 
   const onSubmit = async (data: UpdateInvoiceDTOType) => {
     setIsSubmitting(true);
@@ -71,85 +71,212 @@ export const EditInvoiceForm: React.FC<Props> = ({ initialData, onUpdated, onCan
   return (
     <div>
       {successMessage && (
-        <div className="bg-green-100 border border-green-300 text-green-700 text-sm px-4 py-2 rounded">
+        <Alert variant="success">
           {successMessage}
-        </div>
+        </Alert>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
-        <h2 className="text-lg font-bold text-primary">Editar Factura</h2>
+      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+        <h2 className="form-title">Editar Factura</h2>
+        <p className="form-subtitle">
+          Modifica la información de la factura del proveedor. Todos los campos marcados con * son obligatorios.
+        </p>
 
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Proveedor
-        </label>
-        <input className="input" {...register('supplier')} placeholder="Proveedor" />
-        {errors.supplier && <p className="error-message">{errors.supplier.message}</p>}
+        {/* Información del Proveedor */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+            Información del Proveedor
+          </h4>
+          
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="form-group">
+              <label className="form-label">Proveedor</label>
+              <input 
+                className="form-input" 
+                {...register('supplier')} 
+                placeholder="Nombre del proveedor" 
+              />
+              {errors.supplier && <p className="form-error">{errors.supplier.message}</p>}
+            </div>
 
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Número factura
-        </label>
-        <input className="input" {...register('numeroFactura')} placeholder="Número de Factura (opcional)" />
-        {errors.numeroFactura && <p className="error-message">{errors.numeroFactura.message}</p>}
-
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setValue('currency', '$')}
-            className={`btn flex-1 ${watch('currency') === '$' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          >
-            $
-          </button>
-          <button
-            type="button"
-            onClick={() => setValue('currency', 'Bs')}
-            className={`btn flex-1 ${watch('currency') === 'Bs' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          >
-            Bs
-          </button>
+            <div className="form-group">
+              <label className="form-label">Número de Factura</label>
+              <input 
+                className="form-input" 
+                {...register('numeroFactura')} 
+                placeholder="Número de Factura (opcional)" 
+              />
+              {errors.numeroFactura && <p className="form-error">{errors.numeroFactura.message}</p>}
+            </div>
+          </div>
         </div>
 
-        <input
-          className="input"
-          type="text"
-          {...register('amount', {
-            setValueAs: (v) => {
-              const str = typeof v === 'string' ? v : String(v ?? '');
-              const replaced = str.replace(',', '.');
-              const parsed = parseFloat(replaced);
-              return parsed;
-            },
-          })}
-          placeholder="Monto"
-        />
-        {errors.amount && <p className="error-message">{errors.amount.message}</p>}
+        {/* Información Financiera */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+            Información Financiera
+          </h4>
+          
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="form-group">
+              <label className="form-label">Monto</label>
+              <input
+                className="form-input"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                {...register('amount', {
+                  setValueAs: (v) => {
+                    const str = typeof v === 'string' ? v : String(v ?? '');
+                    const replaced = str.replace(',', '.');
+                    const parsed = parseFloat(replaced);
+                    return parsed;
+                  },
+                })}
+              />
+              {errors.amount && <p className="form-error">{errors.amount.message}</p>}
+            </div>
 
+            <div className="form-group">
+              <label className="form-label">Tipo de moneda</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setValue('currency', '$')}
+                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                    watch('currency') === '$' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Dólares ($)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('currency', 'Bs')}
+                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                    watch('currency') === 'Bs' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Bolívares (Bs)
+                </button>
+              </div>
+              {errors.currency && <p className="form-error">{errors.currency.message}</p>}
+            </div>
+          </div>
 
+          <div className="form-group">
+            <label className="form-label">Método de Pago</label>
+            <select className="form-select" {...register('paymentMethod')}>
+              <option value="">Selecciona un método de pago</option>
+              <option value="cuentaBs">Cuenta Bs</option>
+              <option value="bsEfectivo">Efectivo Bs</option>
+              <option value="dolaresEfectivo">Efectivo $</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="cheque">Cheque</option>
+            </select>
+            {errors.paymentMethod && <p className="form-error">{errors.paymentMethod.message}</p>}
+          </div>
 
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Fecha de emisión:
-        </label>
-        <input className="input" type="date" {...register('date')} placeholder="Fecha" />
-        {errors.date && <p className="error-message">{errors.date.message}</p>}
+          <div className="form-group">
+            <label className="form-label">Descripción</label>
+            <textarea 
+              className="form-textarea" 
+              {...register('description')} 
+              placeholder="Descripción detallada de la factura" 
+              rows={3}
+            />
+            {errors.description && <p className="form-error">{errors.description.message}</p>}
+          </div>
+        </div>
 
+        {/* Fechas */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+            Fechas Importantes
+          </h4>
+          
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="form-group">
+              <label className="form-label">Fecha de Emisión</label>
+              <input 
+                className="form-input" 
+                type="date" 
+                {...register('date')} 
+              />
+              {errors.date && <p className="form-error">{errors.date.message}</p>}
+            </div>
 
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Fecha de vencimiento
-        </label>
-        <input className="input" type="date" {...register('dueDate')} placeholder="Fecha de vencimiento" />
-        {errors.dueDate && <p className="error-message">{errors.dueDate.message}</p>}
+            <div className="form-group">
+              <label className="form-label">Fecha de Vencimiento</label>
+              <input 
+                className="form-input" 
+                type="date" 
+                {...register('dueDate')} 
+              />
+              {errors.dueDate && <p className="form-error">{errors.dueDate.message}</p>}
+            </div>
+          </div>
+        </div>
 
-        <input type="hidden" className="input" {...register('type')} value="Proveedor" />
-        <input
-          type="hidden"
-          {...register('_id')}
-          value={watch('_id')}
-        />
+        {/* Estado de Pago */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+            Estado de Pago
+          </h4>
+          
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="paid"
+                className="form-checkbox"
+                {...register('paid')}
+              />
+              <label htmlFor="paid" className="text-sm font-medium text-gray-700">
+                Factura pagada
+              </label>
+              <span className="text-xs text-gray-500">
+                (Selecciona si la factura ya fue pagada)
+              </span>
+            </div>
+          </div>
+        </div>
 
-
-        <div className="flex justify-between gap-4 pt-4">
-          <button type="submit" className="btn flex-1">Actualizar</button>
-          <button type="button" onClick={onCancel} className="btn-secondary flex-1">Cancelar</button>
+        {/* Botones de acción */}
+        <div className="flex justify-end gap-3 pt-6">
+          <button 
+            type="button" 
+            onClick={onCancel}
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Cancelar
+          </button>
+          
+          <button 
+            type="submit" 
+            disabled={isSubmitting} 
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                Actualizando...
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Actualizar Factura
+              </>
+            )}
+          </button>
         </div>
       </form>
     </div>

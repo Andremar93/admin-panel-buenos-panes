@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateIncomeDTOType, CreateIncomeDTO } from '@/presentation/dtos/income/createIncomeDto';
 import Income from '@/domain/model/Income';
+import { Button, Input, Alert } from '@/presentation/components/ui';
 
 interface Props {
     initialData: Income;
@@ -47,7 +48,6 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
         });
     }, [initialData]);
 
-
     const onSubmit = async (data: CreateIncomeDTOType) => {
         setIsSubmitting(true);
         try {
@@ -67,172 +67,273 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
     return (
         <div>
             {successMessage && (
-                <div className="bg-green-100 border border-green-300 text-green-700 text-sm px-4 py-2 rounded">
+                <Alert variant="success">
                     {successMessage}
-                </div>
+                </Alert>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-lg font-bold text-primary">Crear Ingreso</h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="form-container form-container-no-shadow">
+                <p className="form-subtitle">
+                    Completa la información del ingreso del día. Todos los campos son obligatorios.
+                    <br />
+                    Si no hay un un numero escribir 0. Los decimales se separan con punto. No usar comas.
+                </p>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha del ingreso:</label>
-                <input type="date" className="input" {...register('date')} />
-                {errors.date && <p className="error-message">{errors.date.message}</p>}
+                {/* Fecha */}
+                <div className="form-group">
+                    <label className="form-label">Fecha del ingreso</label>
+                    <input 
+                        type="date" 
+                        className="form-input" 
+                        {...register('date')} 
+                    />
+                    {errors.date && <p className="form-error">{errors.date.message}</p>}
+                </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Efectivo Bs</label>
-              
-                <input
-                    type="number"
-                    step="0.01"
-                    className="input"
-                    {...register('efectivoBs', {
-                        setValueAs: (v) => {
-                            if (typeof v === 'string') {
-                                const replaced = v.replace(',', '.');
-                                return parseFloat(replaced);
-                            }
-                            return v;
-                        },
-                    })}
-                />
-                {errors.efectivoBs && <p className="error-message">{errors.efectivoBs.message}</p>}
+                {/* Ingresos en Efectivo */}
+                <div className="space-y-4 mt-4">
+                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                        Ingresos en Efectivo
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="form-group">
+                            <label className="form-label">Efectivo Bs</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('efectivoBs', {
+                                    setValueAs: (v) => {
+                                        if (typeof v === 'string') {
+                                            const replaced = v.replace(',', '.');
+                                            return parseFloat(replaced);
+                                        }
+                                        return v;
+                                    },
+                                })}
+                            />
+                            {errors.efectivoBs && <p className="form-error">{errors.efectivoBs.message}</p>}
+                        </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Efectivo Dólares</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('efectivoDolares', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.efectivoDolares && <p className="error-message">{errors.efectivoDolares.message}</p>}
+                        <div className="form-group">
+                            <label className="form-label">Efectivo Dólares</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('efectivoDolares', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.efectivoDolares && <p className="form-error">{errors.efectivoDolares.message}</p>}
+                        </div>
+                    </div>
+                </div>
 
+                {/* Métodos de Pago Electrónicos */}
+                <div className="space-y-4 mt-4">
+                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                        Métodos de Pago Electrónicos
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="form-group">
+                            <label className="form-label">Sitef</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('sitef', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.sitef && <p className="form-error">{errors.sitef.message}</p>}
+                        </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sitef</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('sitef', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.sitef && <p className="error-message">{errors.sitef.message}</p>}
+                        <div className="form-group">
+                            <label className="form-label">Punto Externo</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('puntoExterno', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.puntoExterno && <p className="form-error">{errors.puntoExterno.message}</p>}
+                        </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Punto Externo</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('puntoExterno', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.puntoExterno && <p className="error-message">{errors.puntoExterno.message}</p>}
+                        <div className="form-group">
+                            <label className="form-label">Pago Móvil</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('pagomovil', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.pagomovil && <p className="form-error">{errors.pagomovil.message}</p>}
+                        </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pago Móvil</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('pagomovil', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.pagomovil && <p className="error-message">{errors.pagomovil.message}</p>}
+                        <div className="form-group">
+                            <label className="form-label">Biopago</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('biopago', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.biopago && <p className="form-error">{errors.biopago.message}</p>}
+                        </div>
+                    </div>
+                </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Biopago</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('biopago', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.biopago && <p className="error-message">{errors.biopago.message}</p>}
+                {/* Gastos */}
+                <div className="space-y-4 mt-4">
+                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                        Gastos del Día
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="form-group">
+                            <label className="form-label">Gastos Bs</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('gastosBs', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.gastosBs && <p className="form-error">{errors.gastosBs.message}</p>}
+                        </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gastos Bs</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('gastosBs', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.gastosBs && <p className="error-message">{errors.gastosBs.message}</p>}
+                        <div className="form-group">
+                            <label className="form-label">Gastos Dólares</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0.00"
+                                {...register('gastosDolares', {
+                                    setValueAs: (v) => {
+                                        const str = typeof v === 'string' ? v : String(v ?? '');
+                                        const replaced = str.replace(',', '.');
+                                        const parsed = parseFloat(replaced);
+                                        return parsed;
+                                    },
+                                })}
+                            />
+                            {errors.gastosDolares && <p className="form-error">{errors.gastosDolares.message}</p>}
+                        </div>
+                    </div>
+                </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gastos Dólares</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('gastosDolares', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.gastosDolares && <p className="error-message">{errors.gastosDolares.message}</p>}
+                {/* Total del Sistema */}
+                <div className="space-y-4 mt-4">
+                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                        Total del Sistema
+                    </h4>
+                    
+                    <div className="form-group">
+                        <label className="form-label">Total Sistema</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            placeholder="0.00"
+                            {...register('totalSistema', {
+                                setValueAs: (v) => {
+                                    const str = typeof v === 'string' ? v : String(v ?? '');
+                                    const replaced = str.replace(',', '.');
+                                    const parsed = parseFloat(replaced);
+                                    return parsed;
+                                },
+                            })}
+                        />
+                        {errors.totalSistema && <p className="form-error">{errors.totalSistema.message}</p>}
+                    </div>
+                </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total Sistema</label>
-                <input
-                    className="input"
-                    type="text"
-                    {...register('totalSistema', {
-                        setValueAs: (v) => {
-                            const str = typeof v === 'string' ? v : String(v ?? '');
-                            const replaced = str.replace(',', '.');
-                            const parsed = parseFloat(replaced);
-                            return parsed;
-                        },
-                    })}
-                    placeholder="Monto"
-                />
-                {errors.totalSistema && <p className="error-message">{errors.totalSistema.message}</p>}
+                {/* Notas */}
+                <div className="space-y-4 mt-4">
+                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                        Información Adicional
+                    </h4>
+                    
+                    <div className="form-group">
+                        <label className="form-label">Notas</label>
+                        <textarea 
+                            className="form-textarea" 
+                            rows={3}
+                            placeholder="Observaciones adicionales sobre el ingreso del día..."
+                            {...register('notas')} 
+                        />
+                        {errors.notas && <p className="form-error">{errors.notas.message}</p>}
+                    </div>
+                </div>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-                <textarea className="input" {...register('notas')} />
-                {errors.notas && <p className="error-message">{errors.notas.message}</p>}
-
-                <div className="flex justify-between gap-4 pt-4">
-                    <button type="submit" disabled={isSubmitting} className="btn flex-1">
-                        {isSubmitting ? 'Creando...' : 'Crear Ingreso'}
+                {/* Botón de envío */}
+                <div className="flex justify-end pt-6">
+                    <button 
+                        type="submit" 
+                        disabled={isSubmitting} 
+                        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                Creando...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Crear Ingreso
+                            </>
+                        )}
                     </button>
                 </div>
             </form>
