@@ -7,7 +7,9 @@ interface Props {
 }
 
 export const FormattedDate: React.FC<Props> = ({ date }) => {
-    const formatted = format(new Date(date), "d 'de' MMMM 'de' yyyy", { locale: es });
+    // Convert to UTC date to ensure consistent display
+    const utcDate = new Date(date);
+    const formatted = format(utcDate, "d 'de' MMMM 'de' yyyy", { locale: es });
 
     return <span>{formatted}</span>;
 };

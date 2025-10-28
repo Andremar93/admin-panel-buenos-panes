@@ -12,6 +12,8 @@ import {
 import 'chartjs-adapter-date-fns'
 import { es } from 'date-fns/locale'
 import { useMemo } from 'react'
+import { Income } from '@/domain/model/Income'
+import { Expense } from '@/domain/model/Expense'
 
 ChartJS.register(
   LineElement,
@@ -23,17 +25,16 @@ ChartJS.register(
   TimeScale
 )
 
-/**
- * @param {{
- *   title?: string;
- *   incomes?: any[];
- *   expenses?: any[];
- *   incomeAmountKey?: string;     // p.ej. "totalSistema"
- *   expenseAmountKey?: string;    // p.ej. "amountDollars"
- *   getIncomeAmount?: (row:any)=>number; // alternativa al key
- *   getExpenseAmount?: (row:any)=>number;// alternativa al key
- * }} props
- */
+interface IncomeExpenseLineChartProps {
+  title?: string;
+  incomes?: Income[];
+  expenses?: Expense[];
+  incomeAmountKey?: string;
+  expenseAmountKey?: string;
+  getIncomeAmount?: (row: Income) => number;
+  getExpenseAmount?: (row: Expense) => number;
+}
+
 export function IncomeExpenseLineChart({
   title = 'Ingresos vs Egresos',
   incomes = [],
@@ -42,14 +43,14 @@ export function IncomeExpenseLineChart({
   expenseAmountKey = 'amountDollars',
   getIncomeAmount,
   getExpenseAmount,
-}) {
+}: IncomeExpenseLineChartProps) {
   // Helpers
-  const amountFromKey = (row, key) => {
-    const v = Number(row?.[key] ?? 0)
+  const amountFromKey = (row: Income | Expense, key: string) => {
+    const v = Number((row as any)?.[key] ?? 0)
     return Number.isFinite(v) ? v : 0
   }
-  const getIncAmt = getIncomeAmount || ((r) => amountFromKey(r, incomeAmountKey))
-  const getExpAmt = getExpenseAmount || ((r) => amountFromKey(r, expenseAmountKey))
+  const getIncAmt = getIncomeAmount || ((r: Income) => amountFromKey(r, incomeAmountKey))
+  const getExpAmt = getExpenseAmount || ((r: Expense) => amountFromKey(r, expenseAmountKey))
 
   // 1) Normalizar a puntos {x: dateISO, y: number}
   const incomePoints = useMemo(() => {
@@ -67,8 +68,8 @@ export function IncomeExpenseLineChart({
   }, [expenses, getExpAmt])
 
   // 2) Agregar por fecha (si hay múltiples registros en el mismo día)
-  const aggregateByDay = (points) => {
-    const map = new Map()
+  const aggregateByDay = (points: Array<{x: string, y: number}>) => {
+    const map = new Map<string, number>()
     for (const p of points) {
       const day = p.x.slice(0, 10) // YYYY-MM-DD
       map.set(day, (map.get(day) || 0) + p.y)
@@ -76,7 +77,7 @@ export function IncomeExpenseLineChart({
     // Devuelve {x,y} con x=YYYY-MM-DDT00:00:00.000Z
     return Array.from(map.entries())
       .map(([day, sum]) => ({ x: new Date(day).toISOString(), y: sum }))
-      .sort((a, b) => new Date(a.x) - new Date(b.x))
+      .sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime())
   }
 
   const incomeDaily = useMemo(() => aggregateByDay(incomePoints), [incomePoints])
@@ -88,11 +89,11 @@ export function IncomeExpenseLineChart({
       ...incomeDaily.map((p) => p.x),
       ...expenseDaily.map((p) => p.x),
     ])
-    return Array.from(set).sort((a, b) => new Date(a) - new Date(b))
+    return Array.from(set).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
   }, [incomeDaily, expenseDaily])
 
   // 4) Promedios
-  const avg = (arr) =>
+  const avg = (arr: Array<{x: string, y: number}>) =>
     arr.length ? arr.reduce((s, p) => s + (p.y || 0), 0) / arr.length : 0
 
   const avgIncome = useMemo(() => avg(incomeDaily), [incomeDaily])
@@ -156,7 +157,7 @@ export function IncomeExpenseLineChart({
       legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) =>
+          label: (ctx: any) =>
             `${ctx.dataset.label}: $${Number(ctx.parsed.y ?? 0).toFixed(2)}`,
         },
       },

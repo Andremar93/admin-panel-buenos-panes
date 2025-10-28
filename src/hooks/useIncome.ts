@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Income } from '@/domain/model/Income';
 import {
   CreateIncomeDTO,
@@ -22,6 +22,7 @@ export function useIncome() {
     from: '',
     to: '',
   });
+  const hasLoadedRef = useRef(false);
 
   // Memoizar la función de carga para evitar recreaciones
   const loadIncomes = useCallback(async (filters?: {
@@ -93,8 +94,12 @@ export function useIncome() {
 
   // Cargar ingresos al montar el componente
   useEffect(() => {
-    loadIncomes();
-  }, [loadIncomes]);
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadIncomes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     incomes: filteredIncomes,

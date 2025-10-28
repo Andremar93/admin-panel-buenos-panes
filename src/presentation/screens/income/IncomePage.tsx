@@ -36,9 +36,9 @@ export function IncomePage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">Gestión de Facturas</h1>
+        <h1 className="page-title">Gestión de Ingresos</h1>
         <p className="page-subtitle">
-          Crea nuevas facturas de proveedores y administra las existentes
+          Crea nuevos ingresos y administra los existentes
         </p>
       </div>
 
