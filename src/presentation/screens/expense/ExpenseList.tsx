@@ -3,6 +3,12 @@ import { Expense } from '@/domain/model/Expense';
 import { FormattedAmount } from '../components/FormattedAmount';
 import { FormattedDate } from '../components/FormattedDate';
 
+// Utility function to convert date to UTC
+const toUTCDate = (date: string | Date): Date => {
+  const d = new Date(date);
+  return new Date(d.getTime() + (d.getTimezoneOffset() * 60000));
+};
+
 interface Props {
   expenses: Expense[];
   loading: boolean;
@@ -31,11 +37,14 @@ export const ExpenseList: React.FC<Props> = ({
 
   // Memoizar gastos filtrados por texto
   const filteredExpenses = useMemo(() => 
-    expenses.filter((expense) =>
-      `${expense.description} ${expense.type} ${expense.subType || ''}`
+    expenses.filter((expense) => {
+      // Convert expense date to UTC for consistent handling
+      const expenseDate = toUTCDate(expense.date);
+      
+      return `${expense.description} ${expense.type} ${expense.subType || ''}`
         .toLowerCase()
-        .includes(filterText.toLowerCase())
-    ), [expenses, filterText]
+        .includes(filterText.toLowerCase());
+    }), [expenses, filterText]
   );
 
   // Memoizar cálculos de totales
@@ -165,7 +174,7 @@ export const ExpenseList: React.FC<Props> = ({
       </div>
 
       {/* Lista de gastos */}
-      <div className="bg-white rounded-lg shadow overflow-hidden max-h-[600px] overflow-y-auto pr-2">
+      <div className="bg-white rounded-lg shadow overflow-x-auto max-h-[600px] overflow-y-auto pr-2">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -218,7 +227,7 @@ export const ExpenseList: React.FC<Props> = ({
                   <FormattedAmount amount={expense.amountBs} />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <FormattedDate date={expense.date} />
+                  <FormattedDate date={toUTCDate(expense.date)} />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button

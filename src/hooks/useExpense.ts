@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Expense } from '@/domain/model/Expense';
 import { CreateExpenseDTOType } from '@/presentation/dtos/expense/CreateExpenseDto';
 import { UpdateExpenseDTOType } from '@/presentation/dtos/expense/UpdateExpenseDto';
@@ -18,6 +18,7 @@ export function useExpense() {
     from: '',
     to: '',
   });
+  const hasLoadedRef = useRef(false);
 
   // Memoizar la función de carga para evitar recreaciones
   const loadExpenses = useCallback(async (filters?: {
@@ -97,8 +98,12 @@ export function useExpense() {
 
   // Cargar gastos al montar el componente
   useEffect(() => {
-    loadExpenses();
-  }, [loadExpenses]);
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadExpenses();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     expenses: filteredExpenses,

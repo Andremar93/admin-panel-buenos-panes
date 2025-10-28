@@ -16,7 +16,8 @@ export const FormattedAmount: React.FC<Props> = ({
     className = '',
 }) => {
     const fixedAmount = Number(amount.toFixed(2));
-    const formatted = `${prefix}${fixedAmount.toLocaleString('en-US', {
+    const finalPrefix = currency === 'Bs' ? '' : prefix;
+    const formatted = `${finalPrefix}${fixedAmount.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     })}${currency ? ` ${currency}` : ''}`;

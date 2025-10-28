@@ -1,6 +1,6 @@
 // src/presentation/hooks/useInvoices.ts
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Invoice } from '@/domain/model/Invoice';
 import {
   fetchInvoicesUseCase,
@@ -16,6 +16,7 @@ export function useInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   // Memoizar la función de carga para evitar recreaciones
   const loadInvoices = useCallback(async () => {
@@ -102,8 +103,12 @@ export function useInvoices() {
 
   // Cargar facturas al montar el componente
   useEffect(() => {
-    loadInvoices();
-  }, [loadInvoices]);
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadInvoices();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     invoices,

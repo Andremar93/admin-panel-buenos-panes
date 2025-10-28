@@ -10,7 +10,7 @@ import { InvoicePage } from './presentation/screens/invoice/InvoicePage';
 import PrivateRoute from './presentation/components/PrivateRoute';
 import { IncomeCashier } from './presentation/screens/incomeCashier/IncomeCashier';
 import UnauthorizedPage from './presentation/screens/components/UnauthorizedPage';
-
+import { CashFlow } from './presentation/screens/cashFlow/CashFlow';
 function App() {
   return (
     <BrowserRouter>
@@ -32,6 +32,7 @@ function App() {
           <Route path="/facturas" element={<InvoicePage />} />
           <Route path="/salarios" element={<EmployeeSalaryPage />} />
           <Route path="/deudas-empleados" element={<EmployeeDebtPage />} />
+          <Route path="/flujo-caja" element={<CashFlow />} />
         </Route>
 
         {/* Redirección raíz */}
