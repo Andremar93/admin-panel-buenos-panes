@@ -23,7 +23,6 @@ export const DashboardPage = () => {
   const totalsIncomes = useMemo(() => incomes.reduce(
     (acc, inv) => {
       const rate = inv.rate && inv.rate !== 0 ? inv.rate : 100;
-
       acc.efectivoDolares += inv.efectivoDolares;
       acc.efectivoBs += inv.efectivoBs;
       acc.sitef += inv.sitef;

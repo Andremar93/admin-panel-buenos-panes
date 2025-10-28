@@ -28,12 +28,11 @@ export function EmployeeSalaryPage() {
     const [debtItemsToMark, setDebtItemsToMark] = useState<DebtItemToMark[]>([]);
 
     const exchangeTitle = useMemo(
-        () => (exchangeRate ? `Tasa del día: ${String(exchangeRate)}` : 'Cargando tasa…'),
+        () => (exchangeRate ? `Tasa del día: ${String(exchangeRate.rate)}` : 'Cargando tasa…'),
         [exchangeRate]
     );
 
     const handleCreated = (data: any) => {
-        console.log('data', data);
         setSalaries(data.salaries ?? []);
         setDebtItemsToMark(data.debtItemsToMark ?? []);
     };
@@ -53,7 +52,7 @@ export function EmployeeSalaryPage() {
                 <CreateEmployeeSalary
                     onCreated={handleCreated}
                     employees={employees}
-                    exchangeRate={String(exchangeRate || '')}
+                    exchangeRate={String(exchangeRate?.rate || '')}
                 />
 
                 <section>

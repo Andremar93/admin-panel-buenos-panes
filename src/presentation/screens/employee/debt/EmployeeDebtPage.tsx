@@ -1,7 +1,8 @@
-import { useEmployee} from '@/hooks/useEmployee';
+import { useEmployee } from '@/hooks/useEmployee';
 import { useEffect, useMemo, useState } from 'react';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
-import {CreateEmployeeDebt} from '@/presentation/screens/employee/debt/CreateEmployeeDebt';
+import { CreateEmployeeDebt } from '@/presentation/screens/employee/debt/CreateEmployeeDebt';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 type DebtRow = {
     name: string;
@@ -17,21 +18,22 @@ type DebtRow = {
 export function EmployeeDebtPage() {
     const { employees, loading, error } = useEmployee();
     const { exchangeRate, getExchangeRate } = useExchangeRate();
+    const { user, loading: userLoading } = useCurrentUser();
     const [salaries, setSalaries] = useState<DebtRow[]>([]);
 
     const exchangeTitle = useMemo(
-        () => (exchangeRate ? `Tasa del día: ${exchangeRate}` : 'Cargando tasa…'),
+        () => (exchangeRate ? `Tasa del día: ${exchangeRate.rate}` : 'Cargando tasa…'),
         [exchangeRate]
     );
 
+    if (userLoading) {
+        return <div className="page-container">Cargando usuario…</div>;
+    }
+
     const handleCreated = (data: { salaries: DebtRow[] }) => {
-        console.log('here')
         setSalaries(data.salaries ?? []);
     };
 
-    useEffect(() => {
-        getExchangeRate(new Date().toISOString().split('T')[0]);
-    }, [getExchangeRate]);
 
     return (
         <div className="mx-auto max-w-7xl p-6">
@@ -46,7 +48,8 @@ export function EmployeeDebtPage() {
                     employees={employees}
                     currentUserId="67a2123e947559906d96eaa1"
                     onCreated={handleCreated}
-                    // exchangeRate={exchangeRate}
+                    userName={user?.username ?? ''}
+                // exchangeRate={exchangeRate}
                 />
             </div>
         </div>

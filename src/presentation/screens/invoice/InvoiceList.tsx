@@ -158,7 +158,8 @@ export const InvoiceList: React.FC<Props> = ({
 
                 {/* Fecha de creación */}
                 <div className="text-sm text-gray-500">
-                  Fecha de creación: <FormattedDate date={invoice.date} />
+                  Fecha de creación: <FormattedDate date={invoice.date} /> /
+                  Creado por: {invoice.createdBy}
                 </div>
 
                 {/* Monto */}

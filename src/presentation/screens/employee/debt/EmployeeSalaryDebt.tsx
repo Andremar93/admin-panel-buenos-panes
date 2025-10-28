@@ -44,7 +44,6 @@ export function EmployeeDebtPage() {
                 <CreateEmployeeDebt
                     onCreated={handleCreated}
                     employees={employeesWithUnpaidDebts}
-                    exchangeRate={exchangeRate}
                 />
 
                 <section>

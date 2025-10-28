@@ -15,5 +15,6 @@ export interface Invoice {
     paid: boolean;
     googleRow: number;
     numeroFactura?: string;
+    createdBy: string;
   }
   

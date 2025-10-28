@@ -67,8 +67,6 @@ export const EmployeeSalaryList: React.FC<Props> = ({
       const formatted = format(now, 'dd-MMM-yy').replace('.', '');
       const description = `Sueldos Pagados - ${formatted}`;
 
-      console.log(salaries)
-
       await createExpense({
         description,
         amount: totals.netUSD,

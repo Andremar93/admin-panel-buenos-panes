@@ -44,7 +44,7 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
             pagomovil: Number(initialData.pagomovil),
             puntoExterno: Number(initialData.puntoExterno),
             sitef: Number(initialData.sitef),
-            totalSistema: Number(initialData.totalSistema),
+            totalSistema: Number(initialData.totalSistema)
         });
     }, [initialData]);
 

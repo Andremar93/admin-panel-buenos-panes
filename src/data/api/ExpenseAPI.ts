@@ -24,7 +24,6 @@ export const ExpenseAPI = {
     expense: UpdateExpenseDTOType
   ): Promise<Expense> {
     const res = await api.put(`/expenses/${id}`, expense);
-    console.log(res)
     return res.data.expense;
   },
 

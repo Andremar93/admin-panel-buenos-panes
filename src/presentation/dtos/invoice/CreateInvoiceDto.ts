@@ -9,7 +9,8 @@ export const CreateInvoiceDTO = z.object({
   amount: z.number(),
   currency: z.enum(['$', 'Bs']),
   numeroFactura: z.string(),
-  date: z.string().or(z.date())
+  date: z.string().or(z.date()),
+  createdBy: z.string().min(1, 'Creado por requerido'),
 });
 
 export type CreateInvoiceDTOType = z.infer<typeof CreateInvoiceDTO>;

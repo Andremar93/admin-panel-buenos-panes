@@ -28,7 +28,6 @@ export const IncomesChart = ({ incomes }) => {
     // Ordenar los ingresos por fecha
 
     const sortedIncomes = useMemo(() => {
-        console.log(incomes)
         return [...incomes].sort(
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         )

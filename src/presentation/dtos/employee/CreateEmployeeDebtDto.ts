@@ -38,4 +38,5 @@ export type CreateEmployeeDebtDTOType = {
   description?: string;
   notes?: string;
   items: Array<{ concept: string; unitAmount: number; quantity: number }>;
+  createdBy: string;
 };

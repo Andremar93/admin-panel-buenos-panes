@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Invoice } from '@/domain/model/Invoice';
 import { useExchangeRate } from '@/hooks/useExchangeRate'; // CAMBIO: usar el nuevo hook
 import { FormattedAmount } from '../components/FormattedAmount';
+import { Input, Button } from '@/presentation/components/ui';
 
 interface Props {
     invoice: Invoice;
@@ -27,18 +28,18 @@ export const PayInvoiceModal: React.FC<Props> = ({ invoice, onClose, onConfirm }
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md space-y-4">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center form-form-container">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md space-y-4 form-group">
                 <h2 className="text-lg font-bold text-gray-800">Pagar Factura</h2>
                 <p className="text-sm text-gray-600">
                     ¿Deseas marcar como pagada la factura de
                 </p>
                 <h2><strong>{invoice.supplier} - #{invoice.numeroFactura}</strong> ? </h2>
 
-                <label className="text-sm font-medium text-gray-700">Fecha de Pago</label>
-                <input
+
+                <Input
+                    label="Fecha de Pago"
                     type="date"
-                    className="input"
                     value={paymentDate}
                     onChange={(e) => setPaymentDate(e.target.value)}
                 />
@@ -48,7 +49,7 @@ export const PayInvoiceModal: React.FC<Props> = ({ invoice, onClose, onConfirm }
                 {!loading && exchangeRate && (
                     <div>
                         <p className="text-sm text-green-700">
-                            Tasa del día: <FormattedAmount prefix='' amount={exchangeRate} currency="USD" />
+                            Tasa del día: <FormattedAmount prefix='' amount={exchangeRate.rate} currency="USD" />
 
                         </p>
                         <p className="text-sm text-green-700">
@@ -56,9 +57,9 @@ export const PayInvoiceModal: React.FC<Props> = ({ invoice, onClose, onConfirm }
                             <FormattedAmount
                                 prefix=''
                                 amount={
-                                    isNaN(Number(exchangeRate)) || isNaN(invoice.amountDollars)
+                                    isNaN(Number(exchangeRate.rate)) || isNaN(invoice.amountDollars)
                                         ? 0
-                                        : invoice.amountDollars * Number(exchangeRate)
+                                        : invoice.amountDollars * Number(exchangeRate.rate)
                                 }
                                 currency="Bs"
                             />
@@ -67,8 +68,8 @@ export const PayInvoiceModal: React.FC<Props> = ({ invoice, onClose, onConfirm }
                 )}
 
                 <div className="flex justify-end gap-4 pt-4">
-                    <button onClick={onClose} className="btn-secondary">Cancelar</button>
-                    <button onClick={handleConfirm} className="btn">Confirmar</button>
+                    <Button onClick={onClose} type="button" size="md" variant="secondary">Cancelar</Button>
+                    <Button onClick={handleConfirm} type="submit" disabled={loading} size="md" variant="primary">Confirmar</Button>
                 </div>
             </div>
         </div>

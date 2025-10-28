@@ -11,16 +11,16 @@ import {
 
 type Props = {
     employees: Employee[];
-    currentUserId: string;
+    userName: string;
     onCreated?: (d: any) => void;
     onCancel?: () => void;
 };
 
 export const CreateEmployeeDebt: React.FC<Props> = ({
     employees,
-    currentUserId,
+    userName,
     onCreated,
-    onCancel
+    onCancel,
 }) => {
     const { createDebt, loading, error } = useEmployeeDebt();
 
@@ -40,7 +40,7 @@ export const CreateEmployeeDebt: React.FC<Props> = ({
             notes: '',
             type: 'standard',
             paymentDate: undefined, // reused as Vale snapshot date
-            items: []
+            items: [],
         }
     });
 
@@ -95,6 +95,7 @@ export const CreateEmployeeDebt: React.FC<Props> = ({
                 unitAmount: Number(it.unitAmount || 0),
                 quantity: Number(it.quantity || 1),
             })),
+            createdBy: userName
         };
 
         const created = await createDebt(payload);

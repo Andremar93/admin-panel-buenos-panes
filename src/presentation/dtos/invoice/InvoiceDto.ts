@@ -16,6 +16,7 @@ export const InvoiceDTO = z.object({
   paid: z.boolean(),
   googleRow: z.number().int().nonnegative(),
   numeroFactura: z.string().optional(),
+  createdBy: z.string().min(1, 'Creado por requerido'),
 });
 
 export type InvoiceDTOType = z.infer<typeof InvoiceDTO>;

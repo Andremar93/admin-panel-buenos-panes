@@ -99,6 +99,7 @@ export const CreateEmployeeSalary: React.FC<Props> = ({
 
   const rate = useMemo(() => {
     const r = parseFloat(exchangeRate);
+    console.log('rate', r, exchangeRate);
     return Number.isFinite(r) && r > 0 ? r : null;
   }, [exchangeRate]);
 
@@ -264,9 +265,7 @@ export const CreateEmployeeSalary: React.FC<Props> = ({
     for (const d of debts) {
       const isInSelection = selection.debtIds.has(d._id);
       const isPending = d.status === 'pending';
-      
-     
-      
+       
       if (isInSelection && isPending) {
         const debtAmount = Number(d.totalAmount || 0);
         totalUSD += debtAmount;
@@ -604,7 +603,6 @@ export const CreateEmployeeSalary: React.FC<Props> = ({
                                   {items.map((it, idx) => {
                                     const key = itemKey(d._id, idx);
                                     const checked = debtSelections[index]?.itemKeys?.has(key) ?? false;
-                                    console.log('it', it);
                                     const canSelect =
                                       canPickPerItem && !isDebtSelected && !it.isPaid; // si está marcada la deuda completa, deshabilitar ítems
 

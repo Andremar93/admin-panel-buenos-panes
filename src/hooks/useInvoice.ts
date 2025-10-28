@@ -79,6 +79,9 @@ export function useInvoices() {
       setInvoices((prev) =>
         prev.map((inv) => (inv._id === paidInvoice._id ? paidInvoice : inv))
       );
+      setInvoices((prev) =>
+        prev.filter((inv) => inv._id !== paidInvoice._id)
+      );
       return paidInvoice;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al pagar factura';

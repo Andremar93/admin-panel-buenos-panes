@@ -21,7 +21,6 @@ export const IncomeAPI = {
       if (error.response?.status === 404) {
         throw new Error('El endpoint /incomes/create no fue encontrado (404)');
       }
-      console.log(error, 'from incompeapi');
       // Reenviás el mensaje por defecto si no es 404
       throw new Error(error);
     }

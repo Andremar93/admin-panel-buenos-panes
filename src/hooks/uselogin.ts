@@ -15,7 +15,6 @@ export const useLogin = () => {
     setError(null);
     try {
       const user = await loginUseCase.execute(username, password);
-      console.log(user)
       if (user.data.token) {
         localStorage.setItem('auth_token', user.data.token);
         localStorage.setItem('user', JSON.stringify(user.data.user));
