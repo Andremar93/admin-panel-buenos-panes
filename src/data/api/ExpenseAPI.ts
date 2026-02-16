@@ -6,6 +6,7 @@ import api from '@/config/api';
 export const ExpenseAPI = {
   async createExpense(expense: Expense): Promise<Expense> {
     const res = await api.post('/expenses/create', expense);
+    console.log('RES:',res)
     return res.data.expense;
   },
 

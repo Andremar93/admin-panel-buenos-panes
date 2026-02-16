@@ -88,10 +88,10 @@ export const ExpenseList: React.FC<Props> = ({
   );
 
   if (loading) return <p className="text-gray-500">Cargando gastos...</p>;
-  if (error) return <p className="text-red-600 font-medium">Error: {error}</p>;
 
   return (
     <div className="flex-1">
+     {/* if (error)<p className="text-red-600 font-medium">Error: {error}</p>; */}
       
       {/* Filtros */}
       <div className="mb-4 p-4 bg-gray-50 rounded-lg">
