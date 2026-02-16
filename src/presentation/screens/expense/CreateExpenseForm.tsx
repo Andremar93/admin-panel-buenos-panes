@@ -11,6 +11,7 @@ interface Props {
 export const CreateExpenseForm: React.FC<Props> = ({ onCreated }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<CreateExpenseDTOType>({
     resolver: zodResolver(CreateExpenseDTO),
@@ -22,7 +23,8 @@ export const CreateExpenseForm: React.FC<Props> = ({ onCreated }) => {
 
   const onSubmit = async (data: CreateExpenseDTOType) => {
     setIsSubmitting(true);
-
+    setErrorMessage('');
+    setSuccessMessage('');
     try {
       await onCreated(data);
       setSuccessMessage('Gasto creado exitosamente');
@@ -30,9 +32,10 @@ export const CreateExpenseForm: React.FC<Props> = ({ onCreated }) => {
         setSuccessMessage('');
         reset({ paid: true });
       }, 3000);
-    } catch (error) {
-      console.error(error);
-    } finally {
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Error al crear el gasto');
+    }
+    finally {
       setIsSubmitting(false)
     }
   };
@@ -42,6 +45,12 @@ export const CreateExpenseForm: React.FC<Props> = ({ onCreated }) => {
       {successMessage && (
         <Alert variant="success">
           {successMessage}
+        </Alert>
+      )}
+
+      {errorMessage && (
+        <Alert variant="error">
+          {errorMessage}
         </Alert>
       )}
 

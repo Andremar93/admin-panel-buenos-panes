@@ -21,6 +21,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('Interceptor error:', error);
+
     if (error.response) {
       const status = error.response.status;
 
@@ -30,20 +32,22 @@ api.interceptors.response.use(
         localStorage.removeItem('user_type');
         window.location.href = '/login';
       }
-      // Devolvés un error controlado
-      throw new Error(
-        error.response.data.message || 'Error en la respuesta del servidor'
-      );
+
+      const backendMessage =
+        error.response.data?.error ||   
+        error.response.data?.message || 
+        'Error en la respuesta del servidor';
+
+      throw new Error(backendMessage);
     }
 
-    // Si no hay respuesta (por ejemplo, servidor caído)
     if (error.request) {
       throw new Error('No hay respuesta del servidor. Verificá tu conexión.');
     }
 
-    // Otro tipo de error (por ejemplo, error en el interceptor mismo)
     throw new Error(error.message || 'Ocurrió un error inesperado');
   }
 );
+
 
 export default api;
