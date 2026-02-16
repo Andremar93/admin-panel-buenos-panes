@@ -72,7 +72,7 @@ export function IncomePage() {
         <div className="space-y-6">
           <div className="card">
             <div className="card-header">
-              <h2 className="text-lg font-semibold text-gray-900">Lista de Facturas</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Lista de Ingresos</h2>
             </div>
             <div className="card-body">
               <IncomeList

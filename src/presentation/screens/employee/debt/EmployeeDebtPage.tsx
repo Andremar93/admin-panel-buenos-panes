@@ -36,11 +36,12 @@ export function EmployeeDebtPage() {
 
 
     return (
-        <div className="mx-auto max-w-7xl p-6">
-            <div className="mb-6 flex flex-col gap-2">
-                <h1 className="text-2xl font-bold text-gray-900">Deudas Empleados</h1>
+        <div className="page-container">
+            <div className="page-header">
+                <h1 className="page-title">Deudas Empleados</h1>
                 <p className="text-sm text-gray-500">{exchangeTitle}</p>
             </div>
+
 
             {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2"> */}
             <div className="flex justify-center">
@@ -52,6 +53,6 @@ export function EmployeeDebtPage() {
                 // exchangeRate={exchangeRate}
                 />
             </div>
-        </div>
+        </div >
     );
 }

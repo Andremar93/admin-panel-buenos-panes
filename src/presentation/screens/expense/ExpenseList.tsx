@@ -38,9 +38,6 @@ export const ExpenseList: React.FC<Props> = ({
   // Memoizar gastos filtrados por texto
   const filteredExpenses = useMemo(() => 
     expenses.filter((expense) => {
-      // Convert expense date to UTC for consistent handling
-      const expenseDate = toUTCDate(expense.date);
-      
       return `${expense.description} ${expense.type} ${expense.subType || ''}`
         .toLowerCase()
         .includes(filterText.toLowerCase());
@@ -50,7 +47,6 @@ export const ExpenseList: React.FC<Props> = ({
   // Memoizar cálculos de totales
   const totals = useMemo(() => filteredExpenses.reduce(
     (acc, inv) => {
-      const amount = inv.amountDollars || 0;
       acc.efectivoDolares += inv.paymentMethod === 'dolaresEfectivo' ? inv.amountDollars : 0;
       acc.efectivoBs += inv.paymentMethod === 'bsEfectivo' ? inv.amountDollars : 0;
       acc.amountDollars += inv.amountDollars;
@@ -93,7 +89,6 @@ export const ExpenseList: React.FC<Props> = ({
 
   if (loading) return <p className="text-gray-500">Cargando gastos...</p>;
   if (error) return <p className="text-red-600 font-medium">Error: {error}</p>;
-  if (expenses.length === 0) return <p className="text-gray-400">No hay gastos registrados.</p>;
 
   return (
     <div className="flex-1">
@@ -174,74 +169,80 @@ export const ExpenseList: React.FC<Props> = ({
       </div>
 
       {/* Lista de gastos */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto max-h-[600px] overflow-y-auto pr-2">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Descripción
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tipo
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Método de Pago
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Monto USD
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Monto Bs
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fecha
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredExpenses.map((expense) => (
-              <tr key={expense._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {expense.description}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {expense.type}
-                  </span>
-                  {expense.subType && (
-                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {expense.subType}
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {expense.paymentMethod}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <FormattedAmount amount={expense.amountDollars} />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <FormattedAmount amount={expense.amountBs} />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <FormattedDate date={toUTCDate(expense.date)} />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => onEdit(expense)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Editar
-                  </button>
-                </td>
+      {expenses.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <p className="text-gray-400 text-lg">No hay gastos registrados</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-x-auto max-h-[600px] overflow-y-auto pr-2">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Descripción
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tipo
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Método de Pago
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Monto USD
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Monto Bs
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fecha
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredExpenses.map((expense) => (
+                <tr key={expense._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {expense.description}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {expense.type}
+                    </span>
+                    {expense.subType && (
+                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {expense.subType}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {expense.paymentMethod}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <FormattedAmount amount={expense.amountDollars} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <FormattedAmount amount={expense.amountBs} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <FormattedDate date={toUTCDate(expense.date)} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => onEdit(expense)}
+                      className="text-indigo-600 hover:text-indigo-900"
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

@@ -117,6 +117,8 @@ export const CreateExpenseForm: React.FC<Props> = ({ onCreated }) => {
               <option value="Nómina">Nómina</option>
               <option value="Servicios">Servicios</option>
               <option value="Mantenimiento">Mantenimiento</option>
+              <option value="Proveedor">Proveedor</option>
+              <option value="Harina">Harina</option>
             </select>
             {errors.type && <p className="form-error">{errors.type.message}</p>}
           </div>
