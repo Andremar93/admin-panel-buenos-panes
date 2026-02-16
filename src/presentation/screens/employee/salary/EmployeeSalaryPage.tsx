@@ -42,7 +42,7 @@ export function EmployeeSalaryPage() {
     }, [getExchangeRate]);
 
     return (
-        <div className="mx-auto max-w-7xl p-6 space-y-6">
+        <div className="page-container">
             <div className="mb-4 flex flex-col gap-1">
                 <h1 className="text-2xl font-bold text-gray-900">Nómina</h1>
                 <p className="text-sm text-gray-500">{exchangeTitle}</p>

@@ -5,12 +5,11 @@ import { useInvoices } from '@/hooks/useInvoice'
 import { FormattedAmount } from '../components/FormattedAmount'
 import { IncomeExpenseChart } from '@/presentation/screens/dashboard/IncomeExpenseChart'
 import { DonutChart } from './DonutChart'
-import dayjs from 'dayjs';
 
 export const DashboardPage = () => {
 
   const { expenses, loading: loadingExpenses, error: errorExpenses, applyFilters, filterRange } = useExpense();
-  const { incomes, loading: loadingIncomes, error: errorIncomes, applyFilters: applyFiltersIncome } = useIncome();
+  const { incomes, loading: loadingIncomes, error: errorIncomes, applyFilters: applyFiltersIncome, filterRange: filterRangeIncome } = useIncome();
   const { invoices, loading: loadingInvoices, error: errorInvoices } = useInvoices();
   const [startDate, setStartDate] = useState('');
   const [finishDate, setFinishDate] = useState('');
@@ -39,6 +38,13 @@ export const DashboardPage = () => {
       acc.biopagoUSD += inv.biopago / rate;
       acc.puntoExternoUSD += inv.puntoExterno / rate;
       acc.gastosBsUSD += inv.gastosBs / rate;
+
+      acc.efectivoBs += inv.efectivoBs;
+      acc.sitef += inv.sitef;
+      acc.pagomovil += inv.pagomovil;
+      acc.biopago += inv.biopago;
+      acc.puntoExterno += inv.puntoExterno;
+      acc.gastosBs += inv.gastosBs;
 
       return acc;
     },
@@ -104,6 +110,49 @@ export const DashboardPage = () => {
     };
   }, [incomes]);
 
+  const totalsIncomesTheDayBefore = useMemo(() => {
+    const inv = incomes[1];
+    if (!inv) return {
+      efectivoDolares: 0,
+      efectivoBs: 0,
+      sitef: 0,
+      pagomovil: 0,
+      biopago: 0,
+      puntoExterno: 0,
+      gastosBs: 0,
+      gastosDolares: 0,
+      efectivoBsUSD: 0,
+      sitefUSD: 0,
+      pagomovilUSD: 0,
+      biopagoUSD: 0,
+      puntoExternoUSD: 0,
+      gastosBsUSD: 0,
+      totalSistema: 0
+    };
+
+    const rate = inv.rate && inv.rate !== 0 ? inv.rate : 100;
+
+    return {
+      efectivoDolares: inv.efectivoDolares,
+      efectivoBs: inv.efectivoBs,
+      sitef: inv.sitef,
+      pagomovil: inv.pagomovil,
+      biopago: inv.biopago,
+      puntoExterno: inv.puntoExterno,
+      gastosBs: inv.gastosBs,
+      gastosDolares: inv.gastosDolares,
+      totalSistema: inv.totalSistema,
+
+      // Conversión a USD
+      efectivoBsUSD: inv.efectivoBs / rate,
+      sitefUSD: inv.sitef / rate,
+      pagomovilUSD: inv.pagomovil / rate,
+      biopagoUSD: inv.biopago / rate,
+      puntoExternoUSD: inv.puntoExterno / rate,
+      gastosBsUSD: inv.gastosBs / rate
+    };
+  }, [incomes]);
+
 
   // Memoizar el total de ingresos en USD
   const totalIngresosUSD = useMemo(() =>
@@ -115,10 +164,48 @@ export const DashboardPage = () => {
     totalsIncomes.puntoExternoUSD, [totalsIncomes]
   );
 
+  const totalIngresosBs = useMemo(() =>
+    totalsIncomes.efectivoBs +
+    totalsIncomes.sitef +
+    totalsIncomes.pagomovil +
+    totalsIncomes.biopago +
+    totalsIncomes.puntoExterno, [totalsIncomes]
+  );
+  // Calcular el promedio diario de ingresos
+  const promedioDiarioIngresos = useMemo(() => {
+    if (totalIngresosUSD === 0) return 0;
+
+    // Si hay un rango de fechas filtrado, usar ese rango
+    if (filterRangeIncome.from && filterRangeIncome.to) {
+      const fromDate = new Date(filterRangeIncome.from);
+      const toDate = new Date(filterRangeIncome.to);
+      const diffTime = Math.abs(toDate.getTime() - fromDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 para incluir ambos días
+      return diffDays > 0 ? totalIngresosUSD / diffDays : 0;
+    }
+
+    // Si hay fechas seleccionadas manualmente, usar esas
+    if (startDate && finishDate) {
+      const fromDate = new Date(startDate);
+      const toDate = new Date(finishDate);
+      const diffTime = Math.abs(toDate.getTime() - fromDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      return diffDays > 0 ? totalIngresosUSD / diffDays : 0;
+    }
+
+    // Si no hay filtros, usar el número de registros de ingresos como base
+    const numRegistros = incomes.length;
+    return numRegistros > 0 ? totalIngresosUSD / numRegistros : 0;
+  }, [totalIngresosUSD, filterRangeIncome, startDate, finishDate, incomes.length]);
+
   console.log('expenses', expenses)
   // Memoizar el total de gastos
   const totalGastos = useMemo(() =>
     expenses.reduce((acc, expense) => acc + (expense.amountDollars || 0), 0), [expenses]
+  );
+
+  const totalGastosBs = useMemo(() =>
+    expenses.reduce((acc, expense) => acc + (expense.amountBs || 0), 0), [expenses]
   );
 
 
@@ -139,8 +226,30 @@ export const DashboardPage = () => {
   }, [expenses]);
 
 
+  const expensesYesterday = useMemo(() => {
+    const today = new Date();
 
-  console.log('expensesToday', expensesToday)
+    // Create a new date for "yesterday" in UTC
+    const yesterdayUTC = new Date(Date.UTC(
+      today.getUTCFullYear(),
+      today.getUTCMonth(),
+      today.getUTCDate() - 1
+    ));
+
+    const yesterdayYear = yesterdayUTC.getUTCFullYear();
+    const yesterdayMonth = yesterdayUTC.getUTCMonth();
+    const yesterdayDay = yesterdayUTC.getUTCDate();
+
+    return expenses.filter(exp => {
+      const expenseDate = new Date(exp.date);
+      return (
+        expenseDate.getUTCFullYear() === yesterdayYear &&
+        expenseDate.getUTCMonth() === yesterdayMonth &&
+        expenseDate.getUTCDate() === yesterdayDay
+      );
+    });
+  }, [expenses]);
+
 
   // Total de gastos del día en dólares
   const totalGastosToday = useMemo(() =>
@@ -181,14 +290,47 @@ export const DashboardPage = () => {
   );
 
   // 🔹 Construir datos para gráfico (ordenado)
-  const gastosData = useMemo(() => [
-    { label: 'Nómina', value: sortedResult.find(item => item.type === 'Nómina')?.totalDollars || 0, color: '#10b981' },
-    { label: 'Proveedores', value: sortedResult.find(item => item.type === 'Proveedor')?.totalDollars || 0, color: '#3b82f6' },
-    { label: 'Compras Diarías', value: sortedResult.find(item => item.type === 'comprasDiarias')?.totalDollars || 0, color: '#f59e0b' },
-    { label: 'Gastos Fijos', value: sortedResult.find(item => item.type === 'gastosFijos')?.totalDollars || 0, color: '#ef4444' },
-    { label: 'Gastos Personales', value: sortedResult.find(item => item.type === 'gastosPersonales')?.totalDollars || 0, color: '#6b7280' },
-    { label: 'Gastos Extraordinarios', value: sortedResult.find(item => item.type === 'gastosExtraordinarios')?.totalDollars || 0, color: '#c027b7' }
-  ].sort((a, b) => b.value - a.value), [sortedResult]);
+  const gastosData = useMemo(() => {
+    const data = [
+      { label: 'Nómina', value: sortedResult.find(item => item.type === 'Nómina')?.totalDollars || 0, color: '#10b981' },
+      { label: 'Proveedores', value: sortedResult.find(item => item.type === 'Proveedor')?.totalDollars || 0, color: '#3b82f6' },
+      { label: 'Harina', value: sortedResult.find(item => item.type === 'Harina')?.totalDollars || 0, color: '#d946ef' },
+      { label: 'Compras Diarías', value: sortedResult.find(item => item.type === 'comprasDiarias')?.totalDollars || 0, color: '#f59e0b' },
+      { label: 'Gastos Fijos', value: sortedResult.find(item => item.type === 'gastosFijos')?.totalDollars || 0, color: '#ef4444' },
+      { label: 'Gastos Personales', value: sortedResult.find(item => item.type === 'gastosPersonales')?.totalDollars || 0, color: '#6b7280' },
+      { label: 'Gastos Extraordinarios', value: sortedResult.find(item => item.type === 'gastosExtraordinarios')?.totalDollars || 0, color: '#c027b7' }
+    ].sort((a, b) => b.value - a.value);
+
+    // Calcular el total para calcular porcentajes
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+
+    // Añadir el porcentaje a cada item
+    return data.map(item => ({
+      ...item,
+      percentage: total > 0 ? (item.value / total) * 100 : 0
+    }));
+  }, [sortedResult]);
+
+  // 🔹 Construir datos para gráfico de ingresos (ordenado)
+  const ingresosData = useMemo(() => {
+    const data = [
+      { label: 'Efectivo Dólares', value: totalsIncomes.efectivoDolares, color: '#10b981' },
+      { label: 'Efectivo Bs', value: totalsIncomes.efectivoBsUSD, color: '#3b82f6' },
+      { label: 'Sitef', value: totalsIncomes.sitefUSD, color: '#d946ef' },
+      { label: 'Pago Móvil', value: totalsIncomes.pagomovilUSD, color: '#f59e0b' },
+      { label: 'Biopago', value: totalsIncomes.biopagoUSD, color: '#ef4444' },
+      { label: 'Punto Externo', value: totalsIncomes.puntoExternoUSD, color: '#6b7280' }
+    ].sort((a, b) => b.value - a.value);
+
+    // Calcular el total para calcular porcentajes
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+
+    // Añadir el porcentaje a cada item
+    return data.map(item => ({
+      ...item,
+      percentage: total > 0 ? (item.value / total) * 100 : 0
+    }));
+  }, [totalsIncomes]);
 
 
   // Memoizar el total pendiente de facturas
@@ -379,9 +521,13 @@ export const DashboardPage = () => {
 
             <div className="border-t pt-4 mb-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600">Balance Bs</span>
-                <span className="text-lg font-bold text-gray-800">
-                  <FormattedAmount amount={totalsIncomesToday.efectivoBs + totalsIncomesToday.puntoExterno + totalsIncomesToday.biopago + totalsIncomesToday.pagomovil + totalsIncomesToday.sitef} currency="Bs" prefix='' />
+                <span className="text-sm font-medium text-gray-600">Balance Bs (Sin efectivo)</span>
+                <span className="text-lg font-bold text-green-800">
+                  <FormattedAmount amount={
+                    + totalsIncomesToday.puntoExterno +
+                    totalsIncomesToday.biopago +
+                    totalsIncomesToday.pagomovil +
+                    totalsIncomesToday.sitef} currency="Bs" prefix='' />
                 </span>
               </div>
             </div>
@@ -389,7 +535,7 @@ export const DashboardPage = () => {
             <div className="pt-4 mb-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-600">Gastos Bs</span>
-                <span className="text-lg font-bold text-red-800">
+                <span className="text-lg font-bold text-red-600">
                   - <FormattedAmount amount={totalGastosToday} currency="Bs" prefix='' />
                 </span>
               </div>
@@ -398,8 +544,16 @@ export const DashboardPage = () => {
             <div className="border-t pt-4 mb-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-600">Gastos Bs</span>
-                <span className="text-lg {if (totalGastosToday > 0) { return 'text-red-800' } else { return 'text-green-800' }} font-bold">
-                  <FormattedAmount amount={totalsIncomesToday.efectivoBs + totalsIncomesToday.puntoExterno + totalsIncomesToday.biopago + totalsIncomesToday.pagomovil + totalsIncomesToday.sitef - totalGastosToday} currency="Bs" prefix='' />
+                <span
+                  className={`text-lg font-bold ${totalGastosToday > 0 ? 'text-red-600' : 'text-green-600'
+                    }`}
+                >
+                  <FormattedAmount amount={
+                    totalsIncomesToday.puntoExterno +
+                    totalsIncomesToday.biopago +
+                    totalsIncomesToday.pagomovil +
+                    totalsIncomesToday.sitef -
+                    totalGastosToday} currency="Bs" prefix='' />
                 </span>
               </div>
             </div>
@@ -450,18 +604,24 @@ export const DashboardPage = () => {
                 <div className="text-sm text-gray-600 mb-1">INGRESOS</div>
                 <div className="text-lg font-bold text-green-600">
                   <FormattedAmount amount={totalIngresosUSD} />
+                  <br />
+                  <FormattedAmount amount={totalIngresosBs} currency="Bs" prefix='' />
                 </div>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-600 mb-1">GASTOS</div>
                 <div className="text-lg font-bold text-red-600">
                   <FormattedAmount amount={totalGastos} />
+                  <br />
+                  <FormattedAmount amount={totalGastosBs} currency="Bs" prefix='' />
                 </div>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-600 mb-1">GANANCIA</div>
                 <div className="text-lg font-bold text-green-600">
                   <FormattedAmount amount={totalIngresosUSD - totalGastos} />
+                  <br />
+                  <FormattedAmount amount={totalIngresosBs - totalGastosBs} currency="Bs" prefix='' />
                 </div>
               </div>
             </div>
@@ -525,7 +685,7 @@ export const DashboardPage = () => {
         {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Facturas por Pagar */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
+          {/* <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Facturas por Pagar</h3>
               <div className="flex items-center text-sm text-gray-500">
@@ -568,9 +728,8 @@ export const DashboardPage = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
-          {/* Facturas & Pagos */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Facturas</h3>
 
@@ -619,7 +778,7 @@ export const DashboardPage = () => {
               </div>
             </div>
 
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 mt-4">Pagos</h3>
+            {/* <h3 className="text-lg font-semibold text-gray-800 mb-4 mt-4">Pagos</h3> */}
 
           </div>
 
@@ -639,13 +798,52 @@ export const DashboardPage = () => {
                       className="w-3 h-3 rounded mr-2"
                       style={{ backgroundColor: item.color }}
                     ></div>
-                    <span className="text-sm text-gray-600">{item.label}</span>
+                    <span className="text-sm text-gray-600">
+                      {item.label} <span className="text-gray-400">({item.percentage.toFixed(1)}%)</span>
+                    </span>
                   </div>
                   <span className="text-sm font-semibold text-gray-800">
                     <FormattedAmount amount={item.value} />
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Resumen de Ingresos */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Resumen de Ingresos</h3>
+
+            <div className="mb-4 flex justify-center">
+              <DonutChart data={ingresosData} size={120} strokeWidth={12} />
+            </div>
+
+            <div className="space-y-2 mb-4">
+              {ingresosData.map((item, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <div
+                      className="w-3 h-3 rounded mr-2"
+                      style={{ backgroundColor: item.color }}
+                    ></div>
+                    <span className="text-sm text-gray-600">
+                      {item.label} <span className="text-gray-400">({item.percentage.toFixed(1)}%)</span>
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-800">
+                    <FormattedAmount amount={item.value} />
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-600">Promedio Diario</span>
+                <span className="text-lg font-bold text-green-600">
+                  <FormattedAmount amount={promedioDiarioIngresos} />
+                </span>
+              </div>
             </div>
           </div>
 
