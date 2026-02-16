@@ -59,7 +59,6 @@ export function useExpense() {
   const createExpense = useCallback(async (dto: CreateExpenseDTOType) => {
     try {
       const created = await createExpenseUseCase.execute(dto);
-      console.log(created)
       setExpenses((prev) => [created, ...prev]);
       return created;
     } catch (err: unknown) {
