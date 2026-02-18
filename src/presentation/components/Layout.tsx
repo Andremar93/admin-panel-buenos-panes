@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import { ExchangeRateProvider } from '@/presentation/context/ExchangeRateContext';
+import { ExchangeRateBubble } from './ExchangeRateBubble';
 
 export const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+    <ExchangeRateProvider>
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
@@ -45,10 +48,14 @@ export const Layout = () => {
         </svg>
       </button>
 
-      {/* Main Content */}
-      <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
-        <Outlet />
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
+          <Outlet />
+        </main>
+
+        {/* Exchange rate bubble - visible on all pages when logged in */}
+        <ExchangeRateBubble />
+      </div>
+    </ExchangeRateProvider>
   );
 };
