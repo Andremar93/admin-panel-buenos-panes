@@ -76,11 +76,10 @@ export const EditInvoiceForm: React.FC<Props> = ({ initialData, onUpdated, onCan
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
-        <h2 className="form-title">Editar Factura</h2>
-        <p className="form-subtitle">
+      <form onSubmit={handleSubmit(onSubmit)} className="form-form-container form-container-no-shadow">
+        {/* <p className="form-subtitle">
           Modifica la información de la factura del proveedor. Todos los campos marcados con * son obligatorios.
-        </p>
+        </p> */}
 
         {/* Información del Proveedor */}
         <div className="space-y-4">
@@ -222,7 +221,7 @@ export const EditInvoiceForm: React.FC<Props> = ({ initialData, onUpdated, onCan
         </div>
 
         {/* Estado de Pago */}
-        <div className="space-y-4">
+        {/* <div className="space-y-4">
           <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
             Estado de Pago
           </h4>
@@ -243,7 +242,7 @@ export const EditInvoiceForm: React.FC<Props> = ({ initialData, onUpdated, onCan
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Botones de acción */}
         <div className="flex justify-end gap-3 pt-6">
