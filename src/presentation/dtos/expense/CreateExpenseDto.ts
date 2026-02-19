@@ -12,6 +12,10 @@ export const CreateExpenseDTO = z.object({
   description: z.string().min(1, 'La descripción es requerida'),
   date: z.string().or(z.date()),
   paid: z.boolean(),
+  /** Employee name when type is "Nómina" */
+  employeeName: z.string().optional(),
+  /** Employee id when type is "Nómina" */
+  employeeId: z.string().optional(),
 });
 
 // Tipo TypeScript inferido desde el esquema zod

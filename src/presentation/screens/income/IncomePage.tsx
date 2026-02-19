@@ -1,13 +1,12 @@
-import { useIncome } from '@/hooks/useIncome'
-import React, { useState, useEffect } from 'react';
+import { useIncome } from '@/hooks/useIncome';
+import { useState, useEffect } from 'react';
 import { CreateIncomeDTOType } from '@/presentation/dtos/income/createIncomeDto';
 import { EditIncomeForm } from '@/presentation/screens/income/EditIcomeForm';
 import { CreateIncomeForm } from '@/presentation/screens/income/CreateIncomeForm';
 import { IncomeList } from '@/presentation/screens/income/IncomeList';
 
 export function IncomePage() {
-
-  const { incomes, loading, error, createIncome, updateIncome, applyFilters, filterRange } = useIncome()
+  const { incomes, loading, error, createIncome, updateIncome, applyFilters, filterRange } = useIncome();
   const [selectedIncome, setSelectedIncome] = useState<CreateIncomeDTOType | null>(null);
   const [startDate, setStartDate] = useState('');
   const [finishDate, setFinishDate] = useState('');

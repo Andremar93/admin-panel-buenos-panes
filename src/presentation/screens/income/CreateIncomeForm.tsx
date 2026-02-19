@@ -1,30 +1,58 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CreateIncomeDTOType, CreateIncomeDTO } from '@/presentation/dtos/income/createIncomeDto';
+import { CreateIncomeDTOType, CreateIncomeDTO, IncomeExpenseItemType } from '@/presentation/dtos/income/createIncomeDto';
+import { CreateExpenseDTOType } from '@/presentation/dtos/expense/CreateExpenseDto';
 import Income from '@/domain/model/Income';
-import { Button, Input, Alert } from '@/presentation/components/ui';
+import { Alert } from '@/presentation/components/ui';
+import { AddExpenseMiniForm } from '@/presentation/components/AddExpenseMiniForm';
+import { useEmployee } from '@/hooks/useEmployee';
 
 interface Props {
-    initialData: Income;
+    initialData?: Income | null;
     onCreated: (data: CreateIncomeDTOType) => void;
-    // onCancel: () => void;
+}
+
+function toIncomeExpenseItem(data: CreateExpenseDTOType): IncomeExpenseItemType {
+  const currency = data.currency ?? '$';
+  return {
+    description: data.description,
+    amount: Number(data.amount) || 0,
+    currency,
+    type: data.type,
+    subType: data.subType,
+    paymentMethod: currency === 'Bs' ? 'bsEfectivo' : 'dolaresEfectivo',
+    paid: data.paid ?? true,
+    date: data.date,
+    employeeName: data.employeeName,
+    employeeId: data.employeeId,
+  };
 }
 
 export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) => {
     const [successMessage, setSuccessMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-      
+    const [pendingExpenses, setPendingExpenses] = useState<IncomeExpenseItemType[]>([]);
+    const { employees } = useEmployee();
+
     const {
         register,
         handleSubmit,
         formState: { errors },
         reset,
         watch,
-        setValue,
     } = useForm<CreateIncomeDTOType>({
         resolver: zodResolver(CreateIncomeDTO),
     });
+
+    const incomeDate = watch('date');
+    const defaultExpenseDate = typeof incomeDate === 'string' ? incomeDate : (incomeDate ? new Date(incomeDate).toISOString().split('T')[0] : '');
+
+    const handleAddExpense = (data: CreateExpenseDTOType) => {
+        const item = toIncomeExpenseItem(data);
+        setPendingExpenses((prev) => [...prev, item]);
+        // gastosBs y gastosDolares ya no se envían - el backend los calcula desde expenses
+    };
 
     const hasInitialData = useRef(false);
 
@@ -33,14 +61,15 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
 
         hasInitialData.current = true;
 
+        const dateStr = initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
         reset({
             biopago: Number(initialData.biopago),
-            date: new Date(initialData.date).toISOString().split('T')[0], // para input tipo date
+            date: dateStr as string,
             efectivoBs: Number(initialData.efectivoBs),
             efectivoDolares: Number(initialData.efectivoDolares),
             gastosBs: Number(initialData.gastosBs),
             gastosDolares: Number(initialData.gastosDolares),
-            notas: initialData.notas,
+            notas: initialData.notas ?? '',
             pagomovil: Number(initialData.pagomovil),
             puntoExterno: Number(initialData.puntoExterno),
             sitef: Number(initialData.sitef),
@@ -51,8 +80,15 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
     const onSubmit = async (data: CreateIncomeDTOType) => {
         setIsSubmitting(true);
         try {
-            await onCreated(data);
+            // Excluir gastosBs y gastosDolares del payload - el backend los calculará desde expenses
+            const { gastosBs, gastosDolares, ...restData } = data;
+            const payload: CreateIncomeDTOType = { 
+                ...restData, 
+                expenses: pendingExpenses.length > 0 ? pendingExpenses : undefined 
+            };
+            await onCreated(payload);
             setSuccessMessage('Ingreso creado exitosamente');
+            setPendingExpenses([]);
             setTimeout(() => {
                 setSuccessMessage('');
                 reset();
@@ -60,7 +96,7 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
         } catch (err) {
             console.error(err);
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
     };
 
@@ -228,8 +264,26 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
                     <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
                         Gastos del Día
                     </h4>
-                    
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                    <AddExpenseMiniForm
+                        defaultDate={defaultExpenseDate}
+                        onSubmit={handleAddExpense}
+                        employees={employees}
+                    />
+                    {pendingExpenses.length > 0 && (
+                        <div className="rounded-lg border border-gray-200 bg-white p-3">
+                            <p className="text-xs font-medium text-gray-600 mb-2">Gastos a registrar con este ingreso</p>
+                            <ul className="text-xs text-gray-700 space-y-1">
+                                {pendingExpenses.map((e, i) => (
+                                    <li key={i}>
+                                        {e.description} — {e.currency === 'Bs' ? `${e.amount} Bs` : `$${e.amount}`}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="form-group">
                             <label className="form-label">Gastos Bs</label>
                             <input
@@ -267,7 +321,7 @@ export const CreateIncomeForm: React.FC<Props> = ({ initialData, onCreated }) =>
                             />
                             {errors.gastosDolares && <p className="form-error">{errors.gastosDolares.message}</p>}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Total del Sistema */}
