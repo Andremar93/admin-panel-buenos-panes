@@ -193,7 +193,17 @@ export const IncomeList: React.FC<Props> = ({ incomes, loading, error, onEdit, s
                     const pagomovilUSD = showDollarEquivalent ? income.pagomovil / showDollarEquivalent : 0;
                     const efectivoBsUSD = showDollarEquivalent ? income.efectivoBs / showDollarEquivalent : 0;
                     const gastosBsUSD = showDollarEquivalent ? income.gastosBs / showDollarEquivalent : 0;
-                    const totalUSD = (income.gastosDolares + gastosBsUSD + sitefUSD + biopagoUSD + puntoExternoUSD + pagomovilUSD + efectivoBsUSD + income.efectivoDolares).toFixed(2);
+                    // const totalUSD = (income.gastosDolares + gastosBsUSD + sitefUSD + biopagoUSD + puntoExternoUSD + pagomovilUSD + efectivoBsUSD + income.efectivoDolares).toFixed(2);
+                    const totalUSD = (
+                        income.efectivoDolares +
+                        efectivoBsUSD +
+                        sitefUSD +
+                        biopagoUSD +
+                        puntoExternoUSD +
+                        pagomovilUSD
+                        - gastosBsUSD
+                        - income.gastosDolares
+                      ).toFixed(2);
 
                     return (
                         <li key={income._id} className="bg-white p-4 rounded-xl shadow space-y-2 text-sm text-gray-800 my-2 ml-4 mr-4">
