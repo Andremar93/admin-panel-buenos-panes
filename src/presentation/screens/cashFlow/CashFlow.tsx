@@ -1,305 +1,622 @@
-import { useEffect, useState, useMemo } from 'react';
-import { useIncome } from '@/hooks/useIncome';
-import { FormattedAmount } from '../components/FormattedAmount';
+import { useEffect, useState, useMemo } from "react";
+import { useIncome } from "@/hooks/useIncome";
+import { useMonthlyCashFlow } from "@/hooks/useCashFlow";
+import { FormattedAmount } from "../components/FormattedAmount";
+import { useExchangeRate } from '@/hooks/useExchangeRate';
+
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+import { Line, Bar } from "react-chartjs-2";
+
+/* =========================
+   ChartJS Registration
+========================= */
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend
+);
+
+/* =========================
+   Helpers
+========================= */
+
+/* =========================
+   Charts
+========================= */
+
+const CashFlowByAccounts = ({ days }: any) => {
+
+  const data = {
+    labels: days.map((d: any) =>
+      new Date(d.date).toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+      })
+    ),
+    datasets: [
+      // 🟢 Ingresos
+      {
+        type: "bar",
+        label: "Ingresos Cuenta",
+        data: days.map((d: any) => d.ingresosCuenta),
+        backgroundColor: "rgba(34,197,94,0.75)", // emerald-500
+        borderRadius: 6,
+        yAxisID: "y",
+      },
+
+      // 🔴 Gastos
+      {
+        type: "bar",
+        label: "Gastos Cuenta",
+        data: days.map((d: any) => d.gastosCuenta),
+        backgroundColor: "rgba(239,68,68,0.75)", // red-500
+        borderRadius: 6,
+        yAxisID: "y",
+      },
+
+      // 🔵 Neto Diario
+      {
+        type: "line",
+        label: "Net Diario",
+        data: days.map((d: any) => d.netCuenta),
+        borderColor: "#2563EB", // blue-600
+        backgroundColor: "#2563EB",
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: false,
+        yAxisID: "y",
+      },
+
+      // 🟣 Acumulado
+      {
+        type: "line",
+        label: "Acumulado",
+        data: days.map((d: any) => d.accumulatedCuenta),
+        borderColor: "#7C3AED", // violet-600
+        backgroundColor: "#7C3AED",
+        tension: 0.35,
+        borderWidth: 4,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: "y",
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        labels: {
+          usePointStyle: true,
+        },
+      },
+    },
+    scales: {
+      y: {
+        type: "linear" as const,
+        position: "left" as const,
+        grid: {
+          color: "rgba(0,0,0,0.05)",
+        },
+      },
+    },
+  };
+
+  return (
+    <div className="h-[520px]">
+      <Bar data={data} options={options} />
+    </div>
+  );
+};
+
+const CashFlowByEfectivoBs = ({ days }: any) => {
+  const data = {
+    labels: days.map((d: any) =>
+      new Date(d.date).toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+      })
+    ),
+    datasets: [
+      // 🟢 Ingresos
+      {
+        type: "bar",
+        label: "Ingresos Bs",
+        data: days.map((d: any) => d.ingresosBsEfectivo),
+        backgroundColor: "rgba(34,197,94,0.75)",
+        borderRadius: 6,
+        yAxisID: "y",
+      },
+
+      // 🔴 Gastos
+      {
+        type: "bar",
+        label: "Gastos Bs",
+        data: days.map((d: any) => d.gastosBsEfectivo),
+        backgroundColor: "rgba(239,68,68,0.75)",
+        borderRadius: 6,
+        yAxisID: "y",
+      },
+
+      // 🔵 Net Diario
+      {
+        type: "line",
+        label: "Net Diario Bs",
+        data: days.map((d: any) => d.netBsEfectivo),
+        borderColor: "#2563EB",
+        backgroundColor: "#2563EB",
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 3,
+        fill: false,
+        yAxisID: "y",
+      },
+
+      // 🟣 Acumulado
+      {
+        type: "line",
+        label: "Acumulado Bs",
+        data: days.map((d: any) => d.accumulatedBsEfectivo),
+        borderColor: "#7C3AED",
+        backgroundColor: "#7C3AED",
+        borderWidth: 4,
+        tension: 0.35,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: "y",
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        labels: {
+          usePointStyle: true,
+        },
+      },
+    },
+    scales: {
+      y: {
+        type: "linear" as const,
+        position: "left" as const,
+        grid: {
+          color: "rgba(0,0,0,0.05)",
+        },
+      },
+    },
+  };
+
+  return (
+    <div className="h-[520px]">
+      <Bar data={data} options={options} />
+    </div>
+  );
+};
+
+const CashFlowUsdCashChart = ({ days }: any) => {
+  const data = {
+    labels: days.map((d: any) =>
+      new Date(d.date).toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+      })
+    ),
+    datasets: [
+      // 🟢 Ingresos USD
+      {
+        type: "bar",
+        label: "Ingresos USD",
+        data: days.map((d: any) => d.ingresosUsdEfectivo),
+        backgroundColor: "rgba(16,185,129,0.75)", // emerald-500
+        borderRadius: 6,
+        yAxisID: "y",
+      },
+
+      // 🔴 Gastos USD
+      {
+        type: "bar",
+        label: "Gastos USD",
+        data: days.map((d: any) => d.gastosUsdEfectivo),
+        backgroundColor: "rgba(220,38,38,0.75)", // red-600
+        borderRadius: 6,
+        yAxisID: "y",
+      },
+
+      // 🔵 Net Diario USD
+      {
+        type: "line",
+        label: "Net Diario USD",
+        data: days.map((d: any) => d.netUsdEfectivo),
+        borderColor: "#0EA5E9", // sky-500
+        backgroundColor: "#0EA5E9",
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 3,
+        fill: false,
+        yAxisID: "y",
+      },
+
+      // 🟠 Acumulado USD
+      {
+        type: "line",
+        label: "Acumulado USD",
+        data: days.map((d: any) => d.accumulatedUsdEfectivo),
+        borderColor: "#F59E0B", // amber-500
+        backgroundColor: "#F59E0B",
+        borderWidth: 4,
+        tension: 0.35,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: "y",
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        labels: {
+          usePointStyle: true,
+        },
+      },
+    },
+    scales: {
+      y: {
+        type: "linear" as const,
+        position: "left" as const,
+        grid: {
+          color: "rgba(0,0,0,0.05)",
+        },
+      },
+    },
+  };
+
+  return (
+    <div className="h-[520px]">
+      <Bar data={data} options={options} />
+    </div>
+  );
+};
+
+/* =========================
+   Main Component
+========================= */
 
 export const CashFlow = () => {
-    const { incomes, loading, error, applyFilters } = useIncome();
-    const [startDate, setStartDate] = useState('');
-    const [finishDate, setFinishDate] = useState('');
+  const today = new Date();
 
-    // Get yesterday's date in YYYY-MM-DD format
-    useEffect(() => {
-        const today = new Date();
-        const yesterdayDate = new Date(today);
-        yesterdayDate.setDate(today.getDate() - 1);
-        const dateStr = yesterdayDate.toISOString().split('T')[0];
-        if (dateStr) {
-            setStartDate(dateStr);
-            setFinishDate(dateStr);
-        }
-    }, []);
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
+  const [currencyView] = useState<"USD" | "Bs">("USD");
+  const { exchangeRate, getExchangeRate } = useExchangeRate();
 
-    // Apply filters when dates change
-    useEffect(() => {
-        if (startDate && finishDate) {
-            applyFilters(startDate, finishDate);
-        }
-    }, [startDate, finishDate, applyFilters]);
 
-    // Calculate grouped account balances from yesterday's incomes
-    const accountBalances = useMemo(() => {
-        const accounts = {
-            cuentaExterna: 0,
-            cuentaExternaDolares: 0,
-            venezuela: 0,
-            venezuelaDolares: 0,
-            empresa: 0,
-            empresaDolares: 0,
-            efectivoDolares: 0,
-            efectivoBs: 0,
-            efectivoBsDolares: 0,
-        };
+  useEffect(() => {
+    getExchangeRate(new Date().toISOString().split('T')[0]);
+  }, [getExchangeRate]);
 
-        incomes.forEach((income) => {
-            const rate = income.rate && income.rate !== 0 ? income.rate : 100;
+  const [selectedChart, setSelectedChart] = useState<
+    "cuentas" | "bs" | "usd"
+  >("cuentas");
 
-            // CuentaExterna = puntoExterno
-            accounts.cuentaExterna += income.puntoExterno;
-            accounts.cuentaExternaDolares += income.puntoExterno / rate;
+  const { data, isLoading } = useMonthlyCashFlow(
+    selectedYear,
+    selectedMonth,
+    currencyView
+  );
 
-            // Venezuela = biopago + pagomovil
-            accounts.venezuela += (income.biopago + income.pagomovil);
-            accounts.venezuelaDolares += (income.biopago + income.pagomovil) / rate;
+  const { incomes, loading, error, applyFilters } = useIncome();
 
-            // Empresa = sitef
-            accounts.empresa += income.sitef;
-            accounts.empresaDolares += income.sitef / rate;
+  const [startDate, setStartDate] = useState("");
+  const [finishDate, setFinishDate] = useState("");
 
-            // Efectivo en dólares
-            accounts.efectivoDolares += income.efectivoDolares;
+  /* =========================
+     Set Yesterday By Default
+  ========================= */
 
-            //Efectivo en Bolívares
-            accounts.efectivoBs += income.efectivoBs;
-            accounts.efectivoBsDolares += income.efectivoBs / rate;
-        });
+  useEffect(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateStr = yesterday.toISOString().split("T")[0] ?? "";
+    setStartDate(dateStr);
+    setFinishDate(dateStr);
+  }, []);
 
-        return accounts;
-    }, [incomes]);
+  useEffect(() => {
+    if (startDate && finishDate) {
+      applyFilters(startDate, finishDate);
+    }
+  }, [startDate, finishDate, applyFilters]);
 
-    const totalExpected = accountBalances.cuentaExterna +
-        accountBalances.venezuela +
-        accountBalances.empresa +
-        accountBalances.efectivoBs;
+  /* =========================
+     Account Balances
+  ========================= */
 
-    const totalExpectedDolares = accountBalances.cuentaExternaDolares +
-        accountBalances.venezuelaDolares +
-        accountBalances.empresaDolares +
-        accountBalances.efectivoBsDolares;
 
-    return (
-        <div className="page-container">
-            <div className="page-header">
-                <h1 className="page-title">Flujo de Caja</h1>
-                <p className="page-subtitle">
-                    Saldos esperados según ingresos del día anterior
-                </p>
-            </div>
+  const totalsByMethod = useMemo(() => {
+    if (!data || data.days.length === 0) return null;
 
-            {error && <p className="text-red-600 font-medium">{error}</p>}
-            {loading && <p className="text-gray-500">Cargando ingresos...</p>}
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
 
-            <div className="page-content">
-                {/* Date selector */}
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex gap-4 items-end">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                            <input
-                                type="date"
-                                className="border border-gray-300 rounded px-3 py-2"
-                                value={startDate}
-                                onChange={(e) => {
-                                    const selectedDate = e.target.value;
-                                    setStartDate(selectedDate);
-                                    setFinishDate(selectedDate);
-                                }}
-                            />
-                        </div>
-                        <button
-                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                            onClick={() => {
-                                const today = new Date();
-                                const yesterdayDate = new Date(today);
-                                yesterdayDate.setDate(today.getDate() - 1);
-                                const dateStr = yesterdayDate.toISOString().split('T')[0];
-                                if (dateStr) {
-                                    setStartDate(dateStr);
-                                    setFinishDate(dateStr);
-                                }
-                            }}
-                        >
-                            Ver Ayer
-                        </button>
-                    </div>
-                </div>
+    // Filtrar días <= hoy
+    const daysUntilToday = data.days.filter((d: any) => {
+      const date = new Date(d.date);
+      return date <= today;
+    });
 
-                {/* Account balances */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    {/* Cuenta Externa */}
-                    <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            Cuenta Externa <small className='text-xs text-gray-500'> ( <FormattedAmount amount={accountBalances.cuentaExternaDolares} currency="USD" />)</small>
-                        </h3>
-                        {/* <p className="text-sm text-gray-600 mb-3">
-                            (Punto Externo)
-                        </p> */}
-                        <p className="text-2xl font-bold text-blue-600">
-                            <FormattedAmount amount={accountBalances.cuentaExterna} currency="Bs" />
-                        </p>
-                    </div>
+    if (daysUntilToday.length === 0) return null;
 
-                    {/* Venezuela */}
-                    <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-yellow-500">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            Venezuela <small className='text-xs text-gray-500'> ( <FormattedAmount amount={accountBalances.venezuelaDolares} currency="USD" />)</small>
-                        </h3>
-                        {/* <p className="text-sm text-gray-600 mb-3">
-                            (Biopago + Pago Móvil)
-                        </p> */}
-                        <p className="text-2xl font-bold text-yellow-600">
-                            <FormattedAmount amount={accountBalances.venezuela} currency="Bs" />
-                        </p>
-                    </div>
+    const lastValidDay = daysUntilToday[daysUntilToday.length - 1];
 
-                    {/* Empresa */}
-                    <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            Empresa <small className='text-xs text-gray-500'> ( <FormattedAmount amount={accountBalances.empresaDolares} currency="USD" />)</small>
-                        </h3>
-                        {/* <p className="text-sm text-gray-600 mb-3">
-                            (Sitef)
-                        </p> */}
-                        <p className="text-2xl font-bold text-green-600">
-                            <FormattedAmount amount={accountBalances.empresa} currency="Bs" />
-                        </p>
-                    </div>
+    return {
+      netCuenta: lastValidDay.accumulatedCuenta,
+      netBsEfectivo: lastValidDay.accumulatedBsEfectivo,
+      netUsdEfectivo: lastValidDay.accumulatedUsdEfectivo,
+    };
+  }, [data]);
 
-                    {/* Efectivo USD */}
-                    <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            Efectivo Bolívares <small className='text-xs text-gray-500'> ( <FormattedAmount amount={accountBalances.efectivoBsDolares} currency="USD" />)</small>
-                        </h3>
-                        {/* <p className="text-sm text-gray-600 mb-3">
-                            (Efectivo en Dólares)
-                        </p> */}
-                        <p className="text-2xl font-bold text-purple-600">
-                            <FormattedAmount amount={accountBalances.efectivoBs} currency="Bs" />
-                        </p>
-                    </div>
+  const convertedTotals = useMemo(() => {
+    if (!totalsByMethod || !exchangeRate) return null;
 
-                    {/* Efectivo USD */}
-                    {/* <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            Efectivo USD
-                        </h3>
-                         <p className="text-sm text-gray-600 mb-3">
-                            (Efectivo en Dólares)
-                        </p> 
-                        <p className="text-2xl font-bold text-purple-600">
-                            <FormattedAmount amount={accountBalances.efectivoDolares} currency="USD" />
-                        </p>
-                    </div> */}
-                </div>
+    return {
+      cuentaUsd: totalsByMethod.netCuenta / exchangeRate.rate,
+      bsUsd: totalsByMethod.netBsEfectivo / exchangeRate.rate,
+      usdUsd: totalsByMethod.netUsdEfectivo, // ya está en USD
+    };
+  }, [totalsByMethod, exchangeRate]);
 
-                {/* Total summary */}
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h2 className="text-2xl font-bold mb-1">Total Esperado</h2>
-                            <p className="text-indigo-100">
-                                Total de saldos esperados para {startDate}
-                            </p>
-                        </div>
-                        <p className="text-4xl font-bold">
-                            <FormattedAmount amount={totalExpected} currency="Bs" />
-                            <small className='text-xs text-white'> ( <FormattedAmount amount={totalExpectedDolares} currency="USD" />)</small>
-                        </p>
 
-                    </div>
-                </div>
+  /* =========================
+     Render
+  ========================= */
 
-                {/* Breakdown table */}
-                <div className="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
-                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                            Desglose Detallado
-                        </h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Cuenta
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Componentes
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Monto (Bs)
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        Cuenta Externa
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        Punto Externo
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-blue-600">
-                                        <FormattedAmount amount={accountBalances.cuentaExterna} currency="USD" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        Venezuela
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        Biopago + Pago Móvil
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-yellow-600">
-                                        <FormattedAmount amount={accountBalances.venezuela} currency="USD" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        Empresa
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        Sitef
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-green-600">
-                                        <FormattedAmount amount={accountBalances.empresa} currency="USD" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        Efectivo Bolívares
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        Efectivo en Bolívares
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-purple-600">
-                                        <FormattedAmount amount={accountBalances.efectivoBs} currency="Bs" />
-                                    </td>
-                                </tr>
-                                {/* <tr>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        Efectivo USD
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        Efectivo en Dólares
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-purple-600">
-                                        <FormattedAmount amount={accountBalances.efectivoDolares} currency="USD" />
-                                    </td>
-                                </tr> */}
+  return (
+    <div className="page-container space-y-10">
 
-                                <tr className="bg-gray-50 font-bold">
-                                    <td colSpan={2} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        Total
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
-                                        <FormattedAmount amount={totalExpected} currency="USD" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div className="bg-white p-5 rounded-xl shadow-sm border">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">
+            Resultado Cuenta
+          </p>
+
+          <p className={`text-2xl font-bold mt-2 ${(totalsByMethod?.netCuenta || 0) < 0
+            ? "text-red-600"
+            : "text-blue-600"
+            }`}>
+            <FormattedAmount
+              amount={totalsByMethod?.netCuenta || 0}
+              currency="Bs"
+            />
+          </p>
+
+          {convertedTotals && (
+            <p className={`text-2xl font-bold mt-2 ${convertedTotals.cuentaUsd < 0
+              ? "text-red-600"
+              : "text-blue-600"
+              }`}>
+              <FormattedAmount
+                amount={convertedTotals.cuentaUsd}
+                currency="USD"
+              />
+            </p>
+          )}
         </div>
-    );
+        <div className="bg-white p-5 rounded-xl shadow-sm border">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">
+            Resultado Bs Efectivo
+          </p>
+
+          <p className={`text-2xl font-bold mt-2 ${(totalsByMethod?.netBsEfectivo || 0) < 0
+              ? "text-red-600"
+              : "text-green-600"
+            }`}>
+            <FormattedAmount
+              amount={totalsByMethod?.netBsEfectivo || 0}
+              currency="Bs"
+            />
+          </p>
+
+          {convertedTotals && (
+            <p className={`text-2xl font-bold mt-2 ${convertedTotals.bsUsd < 0
+                ? "text-red-600"
+                : "text-green-600"
+              }`}>
+              <FormattedAmount
+                amount={convertedTotals.bsUsd}
+                currency="USD"
+              />
+            </p>
+          )}
+        </div>
+
+        <div className="bg-white p-5 rounded-xl shadow-sm border">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">
+            Resultado USD
+          </p>
+          <p className={`text-2xl font-bold mt-2 ${(totalsByMethod?.netUsdEfectivo || 0) < 0
+            ? "text-red-600"
+            : "text-amber-600"
+            }`}>
+            <FormattedAmount
+              amount={totalsByMethod?.netUsdEfectivo || 0}
+              currency="USD"
+            />
+          </p>
+        </div>
+
+      </div>
+
+
+
+      {/* ===== Monthly Summary ===== */}
+
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <div className="flex justify-between items-center mb-6">
+
+
+          <div>
+            <h2 className="text-xl font-bold">Flujo Mensual</h2>
+            <p className="text-sm text-gray-500">
+              Ingresos vs gastos acumulados del mes
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="border rounded px-2 py-1"
+            >
+              {[...Array(12)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="border rounded px-2 py-1"
+            >
+              {[2024, 2025, 2026].map((y) => (
+                <option key={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <p>Cargando flujo...</p>
+        ) : (
+          data && (
+            <>
+              {/* KPIs */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm">Días Registrados</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {data.days.length}
+                  </p>
+                </div>
+
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <p className="text-sm">Días Negativos</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {data.days.filter((d: any) => d.net < 0).length}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+                <button
+                  onClick={() => setSelectedChart("cuentas")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${selectedChart === "cuentas"
+                    ? "bg-white shadow text-blue-600"
+                    : "text-gray-500"
+                    }`}
+                >
+                  Cuentas Bs
+                </button>
+
+                <button
+                  onClick={() => setSelectedChart("bs")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${selectedChart === "bs"
+                    ? "bg-white shadow text-green-600"
+                    : "text-gray-500"
+                    }`}
+                >
+                  Efectivo Bs
+                </button>
+
+                <button
+                  onClick={() => setSelectedChart("usd")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${selectedChart === "usd"
+                    ? "bg-white shadow text-amber-600"
+                    : "text-gray-500"
+                    }`}
+                >
+                  USD
+                </button>
+              </div>
+
+              {/* Charts */}
+              <div className="space-y-8">
+
+                <div className="bg-white p-6 rounded-xl shadow-md">
+                  {selectedChart === "cuentas" && (
+                    <CashFlowByAccounts days={data.days} />
+                  )}
+
+                  {selectedChart === "bs" && (
+                    <CashFlowByEfectivoBs days={data.days} />
+                  )}
+
+                  {selectedChart === "usd" && (
+                    <CashFlowUsdCashChart days={data.days} />
+                  )}
+                </div>
+              </div>
+            </>
+          )
+        )}
+
+
+
+
+      </div>
+
+      {/* ===== Expected Balances Section ===== */}
+
+      {/* <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-xl text-white shadow-lg">
+        <h2 className="text-2xl font-bold mb-2">Total Esperado</h2>
+        <p className="text-4xl font-bold">
+          <FormattedAmount amount={totalExpected} currency="Bs" />
+        </p>
+      </div> */}
+
+      {error && <p className="text-red-600">{error}</p>}
+      {loading && <p>Cargando ingresos...</p>}
+    </div>
+  );
 };
